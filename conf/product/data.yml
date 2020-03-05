@@ -1,0 +1,36 @@
+data:
+  mysql:
+    demo:
+      url: xxx:xxxxxxxx@tcp(demo.com:3306)/demo?parseTime=True&loc=Local&multiStatements=true&charset=utf8
+      max-idle-conn: 50
+      max-open-conn: 50
+  
+  redis:
+    gateway:
+      cluster: true
+      addrs:
+        - demo.com:6375
+  zk:
+    config:
+      servers:
+        - zookeeper01.com:2181
+        - zookeeper02.com:2181
+        - zookeeper03.com:2181
+        - zookeeper04.com:2181
+        - zookeeper05.com:2181
+  es:
+    demo:
+      ip: demo.com
+      port: 9200
+
+  kafka:
+    brokers:
+      - a.kafka1:9092
+      - a.kafka2:9092
+      - a.kafka3:9092
+
+  influxdb:
+    default:
+      addr: http://192.168.0.1:8086
+      user: xxxxxx
+      password: xxxxxxxxx

@@ -1,0 +1,45 @@
+application:
+  name: demo
+  debug: false
+
+server:
+  addr: 0.0.0.0:13360
+
+
+include: # 其他配置子文件，复用的配置文件
+  data: data.yml
+
+alter:
+  users:
+    - lvfei
+    - fangwendong
+    - xupeng
+
+
+cache:
+  normal:
+    redis: demo
+    lru-enable: true
+    lru-max-size: 50000
+    lru-expire-duration: 1m
+
+
+log:
+  default:
+    logger:
+      filename: log/demo-server.log
+      maxsize: 100
+      maxage: 7
+      maxbackups: 10
+      compress: false
+    interval: 30m
+    level: info
+  slow:
+    logger:
+      filename: log/slow.log
+      maxsize: 100
+      maxage: 7
+      maxbackups: 10
+      compress: false
+    interval: 1h
+    level: info
