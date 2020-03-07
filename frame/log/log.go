@@ -42,7 +42,11 @@ func GetLogger(name string) *zap.Logger {
 }
 
 func Default() *zap.Logger {
-	return logMap["default"]
+	if log, ok := logMap["default"]; ok {
+		return log
+	}
+	// For test case
+	return zap.NewExample()
 }
 
 func initLogger(conf *Conf) *zap.Logger {
