@@ -1,8 +1,6 @@
 package data
 
 import (
-	localLog "github.com/xbonlinenet/goup/frame/log"
-	"github.com/xbonlinenet/goup/frame/util"
 	"errors"
 	"fmt"
 	"log"
@@ -10,8 +8,11 @@ import (
 	"sync"
 	"time"
 
+	localLog "github.com/xbonlinenet/goup/frame/log"
+	"github.com/xbonlinenet/goup/frame/util"
+
+	"github.com/olivere/elastic/v7"
 	"github.com/spf13/viper"
-	"gopkg.in/olivere/elastic.v5"
 )
 
 var mutex = &sync.Mutex{}

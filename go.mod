@@ -34,7 +34,7 @@ require (
 	github.com/go-errors/errors v1.0.1
 	github.com/go-redis/cache v6.4.0+incompatible
 	github.com/go-redis/redis v6.15.2+incompatible
-	github.com/go-sql-driver/mysql v1.4.1
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/imkira/go-interpol v1.1.0 // indirect
 	github.com/jinzhu/gorm v1.9.10
@@ -42,6 +42,7 @@ require (
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
+	github.com/olivere/elastic/v7 v7.0.13
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
 	github.com/prometheus/client_golang v0.9.3
@@ -62,5 +63,4 @@ require (
 	go.uber.org/zap v1.10.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	gopkg.in/olivere/elastic.v5 v5.0.81
 )
