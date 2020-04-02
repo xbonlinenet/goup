@@ -3,6 +3,7 @@
 .DEFAULT_GOAL := build-all
 include built/make/*.make
 
+export GOPROXY=https://goproxy.io
 export DATE=$(shell TZ=UTC-8 date '+%Y%m%d%H%M')
 export OUTPUT=output
 export env=product
@@ -26,6 +27,8 @@ endif
 
 	$(call release_app,${module})
 
+run:
+	cd ${OUTPUT}/${module} && ./bin/${module} --config conf/application.yml
 
 
 clean:

@@ -1,6 +1,6 @@
 application:
   name: demo
-  debug: false
+  debug: true
 
 server:
   addr: 0.0.0.0:13360
