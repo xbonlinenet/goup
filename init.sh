@@ -75,6 +75,8 @@ sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/$server\/pkg\
 
 #sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/demo/g" main.go
 wget -O "pkg/cmd/$module/api/demo/echo.go" https://github.com/xbonlinenet/goup/raw/master/demo/echo.go
+wget -O "pkg/cmd/$module/api/demo/redis.go" https://github.com/xbonlinenet/goup/raw/master/demo/redis.go
+wget -O "pkg/cmd/$module/api/demo/mysql.go" https://github.com/xbonlinenet/goup/raw/master/demo/mysql.go
 
 
 

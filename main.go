@@ -22,5 +22,7 @@ func customRounter(r *gin.Engine) {
 }
 
 func registerRounter() {
-	gateway.RegisterAPI("demo", "echo", "Echo interface for debug", demo.EchoHandler{})
+	gateway.RegisterAPI("demo", "echo", "Demo for echo", demo.EchoHandler{})
+	gateway.RegisterAPI("demo", "redis", "Demo for reids incr", demo.RedisHandler{})
+	gateway.RegisterAPI("demo", "mysql", "Demo for mysql ", demo.MysqlHandler{})
 }

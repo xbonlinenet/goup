@@ -76,6 +76,9 @@ func handlerApiRequest(c *gin.Context) {
 	}
 
 	apiContext := &ApiContext{}
+	apiContext.Host = c.Request.Host
+	apiContext.ClientIP = c.ClientIP()
+	apiContext.UserAgent = c.Request.UserAgent()
 
 	// 验证请求是否在有效时间内
 	apiHandlerInfo := apiHandlerFuncMap[apiKey]
