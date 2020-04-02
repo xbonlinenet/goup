@@ -9,6 +9,11 @@ data:
     gateway:
       cluster: false
       addr: 192.168.0.22:2000
+    demo-cluser:
+      cluster: true
+      addrs:
+        - xx.xx:2000
+        - xx.xx:3000
   zk:
     config:
       servers:
