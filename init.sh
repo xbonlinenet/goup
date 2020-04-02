@@ -59,6 +59,7 @@ wget -O 'built/go/env_check.py' https://github.com/xbonlinenet/goup/raw/master/b
 wget -O 'built/make/common.make' https://github.com/xbonlinenet/goup/raw/master/built/make/common.make
 wget -O 'built/make/init.make' https://github.com/xbonlinenet/goup/raw/master/built/make/init.make
 wget -O 'built/sbin/go-monitor.sh' https://github.com/xbonlinenet/goup/raw/master/built/sbin/go-monitor.sh
+wget -O 'built/version' https://github.com/xbonlinenet/goup/raw/master/built/version
 
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
 wget -O "conf/dev/$module.yml" https://github.com/xbonlinenet/goup/raw/master/conf/product/demo.yml
