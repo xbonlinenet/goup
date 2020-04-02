@@ -1,7 +1,7 @@
 data:
   mysql:
     demo:
-      url: xxx:xxxxxxxx@tcp(demo.com:3306)/demo?parseTime=True&loc=Local&multiStatements=true&charset=utf8
+      url: test:test@tcp(192.168.0.22:3306)/demo?parseTime=True&loc=Local&multiStatements=true&charset=utf8
       max-idle-conn: 50
       max-open-conn: 50
   
@@ -9,7 +9,7 @@ data:
     gateway:
       cluster: true
       addrs:
-        - demo.com:6375
+        - 192.168.0.22:2000
   zk:
     config:
       servers:
