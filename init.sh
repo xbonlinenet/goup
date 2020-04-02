@@ -54,9 +54,11 @@ mkdir -p pkg/cmd/$module/api/demo
 echo '现在开始下载必须的文件...'
 
 wget -O '.gitignore' https://github.com/xbonlinenet/goup/raw/master/.gitignore
+wget -O 'Makefile' https://github.com/xbonlinenet/goup/raw/master/Makefile
 wget -O 'built/go/env_check.py' https://github.com/xbonlinenet/goup/raw/master/built/go/env_check.py
 wget -O 'built/make/common.make' https://github.com/xbonlinenet/goup/raw/master/built/make/common.make
 wget -O 'built/make/init.make' https://github.com/xbonlinenet/goup/raw/master/built/make/init.make
+wget -O 'built/sbin/go-monitor.sh' https://github.com/xbonlinenet/goup/raw/master/built/sbin/go-monitor.sh
 
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
 wget -O "conf/dev/$module.yml" https://github.com/xbonlinenet/goup/raw/master/conf/product/demo.yml
