@@ -110,7 +110,7 @@ echo "make build run module=$module env=dev 编译并运行你的服务"
 echo "make clean release module=$module env=product 将会打包一个生产环境的包，一般情况下你不会使用到"
 
 echo "现在开始吧~~~~"
-echo "#######         cd $server;  make build run module=$module env=dev                     ######"
+echo "#######         cd $module;  make build run module=$module env=dev                     ######"
 echo "####### 在浏览器打开地址 http://localhost:$port/doc/list 查看接口列表     #######"
 echo "####### 在浏览器打开地址 http://localhost:$port/metrics 查看prometheus监控项     #######"
 

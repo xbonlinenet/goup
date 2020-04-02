@@ -7,7 +7,7 @@ data:
   
   redis:
     gateway:
-      cluster: true
+      cluster: false
       addrs:
         - 192.168.0.22:2000
   zk:
