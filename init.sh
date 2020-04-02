@@ -63,14 +63,15 @@ wget -O 'built/version' https://github.com/xbonlinenet/goup/raw/master/built/ver
 
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
 wget -O "conf/dev/$module.yml" https://github.com/xbonlinenet/goup/raw/master/conf/product/demo.yml
-cat conf/dev/$module.yml | tr '0.0.0.0:13360' '0.0.0.0:$port' > conf/dev/$module.yml 
+sed -i "s/0.0.0.0:13360/0.0.0.0:$port/g"  conf/dev/$module.yml 
 
 
 
 
 wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/main.go
-cat pkg/cmd/$module/main.go | tr 'github.com/xbonlinenet/goup/demo' 'coding.xbonline.net/$server/pkg/cmd/$module/api/demo' >  pkg/cmd/$module/main.go
+sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/$server\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/$module/main.go
 
+#sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/demo/g" main.go
 wget -O "pkg/cmd/$module/api/demo/echo.go" https://github.com/xbonlinenet/goup/raw/master/demo/echo.go
 
 
