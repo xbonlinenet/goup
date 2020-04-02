@@ -5,18 +5,12 @@ echo '欢迎使用小步网络 golang 服务脚手架工具'
 echo '请按引导进行操作'
 
 
-count=`ls |grep -v 'init' |wc -w`
-if [ "$count" -gt "0" ];
-then
-    echo "当前目录存在文件，不能初始化工程. 文件数量 $count"
-    exit 1
-else
-    echo "go!"
-fi
+
 
 echo '第一步：输入项目的名称。和 git 代码仓库名字一致， 比如 https://coding.xbonline.net/server/config_center， 这输入 server/config_center'
 
 read server
+
 
 items=`echo $server | tr '/' ' '` 
 array=($items)
@@ -30,15 +24,24 @@ fi
 
 module=${array[1]}
 
+count=`ls |grep "$module" |wc -w`
+if [ "$count" -gt "0" ];
+then
+    echo "目录已经存在不能初始化"
+    exit 1
+else
+    echo "go!"
+fi
+
 echo '第二步：输入服务端口号。端口范围 > 15000'
 
 read port
 
 
 echo '正常创建目录结构...'
-mkdir -p $server
+mkdir -p $module
 
-cd $server
+cd $module
 
 mkdir -p built/go
 mkdir -p built/make
@@ -64,8 +67,7 @@ wget -O 'built/version' https://github.com/xbonlinenet/goup/raw/master/built/ver
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
 wget -O "conf/dev/$module.yml" https://github.com/xbonlinenet/goup/raw/master/conf/product/demo.yml
 sed -i "s/0.0.0.0:13360/0.0.0.0:$port/g"  conf/dev/$module.yml 
-
-
+sed -i "s/demo-application/$server/g"  conf/dev/$module.yml 
 
 
 wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/main.go
