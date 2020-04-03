@@ -1,8 +1,12 @@
 
 
-### 如何构建并测试模块
+### 创建工程
 
-**编译模块**
-```
-make build module=demo
-```
+
+**linux**
+
+`bash  -c "$(curl -fsSL https://raw.githubusercontent.com/xbonlinenet/goup/master/init.sh)"`
+
+**mac**
+
+`bash  -c "$(curl -fsSL https://raw.githubusercontent.com/xbonlinenet/goup/master/init_mac.sh)"`
