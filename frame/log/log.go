@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -41,12 +42,26 @@ func GetLogger(name string) *zap.Logger {
 	return logMap[name]
 }
 
+var testLogger *zap.Logger
+var testLoggerOnce sync.Once
+
 func Default() *zap.Logger {
 	if log, ok := logMap["default"]; ok {
 		return log
 	}
+
+	testLoggerOnce.Do(func() {
+		config := zap.NewProductionConfig()
+		config.Encoding = "console"
+		config.OutputPaths = []string{"stdout"}
+		var err error
+		testLogger, err = config.Build()
+		if err != nil {
+			panic(err)
+		}
+	})
 	// For test case
-	return zap.NewExample()
+	return testLogger
 }
 
 func initLogger(conf *Conf) *zap.Logger {

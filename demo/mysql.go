@@ -6,6 +6,7 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/gateway"
+	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/util"
 )
 
@@ -44,6 +45,8 @@ func (h MysqlHandler) Mock() interface{} {
 }
 
 func (h MysqlHandler) Handler(c *gateway.ApiContext) (interface{}, error) {
+
+	log.Default().Info("Enter MysqlHandler")
 
 	db := data.MustGetDB("demo")
 	createSql := `

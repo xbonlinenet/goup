@@ -25,22 +25,13 @@ cache:
 
 
 log:
-  default:
-    logger:
-      filename: log/server.log
-      maxsize: 100
-      maxage: 7
-      maxbackups: 10
-      compress: false
-    interval: 30m
-    level: info
   error:
     logger:
       filename: log/error.log
       maxsize: 100
       maxage: 7
       maxbackups: 10
-      compress: false
+      compress: true
     interval: 1h
     level: info
   access:
@@ -49,6 +40,6 @@ log:
       maxsize: 100
       maxage: 7
       maxbackups: 10
-      compress: false
+      compress: true
     interval: 1h
     level: info
