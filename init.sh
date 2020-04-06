@@ -12,14 +12,14 @@ echo '第一步：输入项目的名称。和 git 代码仓库名字一致， �
 read server
 
 
-items=`echo $server | tr '/' ' '` 
+items=`echo $server | tr '/' ' '`
 array=($items)
 if [ ${#array[@]} -ne 2 ];
 then
-    echo "项目名称格式非法， 合法示例: server/test. 必须有 / 分割"
-    exit 2
+        echo "项目名称格式非法， 合法示例: server/test. 必须有 / 分割"
+        exit 2
 else
-    echo ''
+        echo ''
 fi
 
 parent=${array[0]}
@@ -28,10 +28,10 @@ module=${array[1]}
 count=`ls |grep "$module" |wc -w`
 if [ "$count" -gt "0" ];
 then
-    echo "目录已经存在不能初始化"
-    exit 1
+        echo "目录已经存在不能初始化"
+        exit 1
 else
-    echo "go!"
+        echo "go!"
 fi
 
 echo '第二步：输入服务端口号。端口范围 > 15000'
@@ -55,6 +55,15 @@ mkdir -p pkg/cmd/$module/api/demo
 
 
 
+if ["$(uname)"=="Darwin"]; then
+	sed_cmd="sed -i \'\'"
+elif ["$(expr substr $(uname -s) 1 5)"=="Linux"]; then
+	sed_cmd="sed -i "
+elif ["$(expr substr $(uname -s) 1 10)"=="MINGW32_NT"]; then
+	sed_cmd="sed -i "
+fi
+
+
 echo '现在开始下载必须的文件...'
 
 wget -O '.gitignore' https://github.com/xbonlinenet/goup/raw/master/.gitignore
@@ -67,19 +76,17 @@ wget -O 'built/version' https://github.com/xbonlinenet/goup/raw/master/built/ver
 
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
 wget -O "conf/dev/$module.yml" https://github.com/xbonlinenet/goup/raw/master/conf/product/demo.yml
-sed -i "s/0.0.0.0:13360/0.0.0.0:$port/g"  conf/dev/$module.yml 
-sed -i "s/demo-application/$parent\/$module/g"  conf/dev/$module.yml 
+$sed_cmd "s/0.0.0.0:13360/0.0.0.0:$port/g"  conf/dev/$module.yml
+$sed_cmd -i "s/demo-application/$parent\/$module/g"  conf/dev/$module.yml
 
 
 wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/main.go
-sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/$parent\/$module\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/$module/main.go
+$sed_cmd -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/$parent\/$module\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/$module/main.go
 
-# sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/server\/hello\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/hello/main.go
-
-#sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/demo/g" main.go
 wget -O "pkg/cmd/$module/api/demo/echo.go" https://github.com/xbonlinenet/goup/raw/master/demo/echo.go
 wget -O "pkg/cmd/$module/api/demo/redis.go" https://github.com/xbonlinenet/goup/raw/master/demo/redis.go
 wget -O "pkg/cmd/$module/api/demo/mysql.go" https://github.com/xbonlinenet/goup/raw/master/demo/mysql.go
+wget -O "pkg/cmd/$module/api/demo/config.go" https://github.com/xbonlinenet/goup/raw/master/demo/config.go
 
 
 
@@ -89,20 +96,20 @@ module coding.xbonline.net/$server
 go 1.12
 
 replace (
-	cloud.google.com/go => github.com/googleapis/google-cloud-go v0.26.0
+        cloud.google.com/go => github.com/googleapis/google-cloud-go v0.26.0
 
-	go.uber.org/atomic => github.com/uber-go/atomic v1.4.0
-	go.uber.org/multierr => github.com/uber-go/multierr v1.1.0
-	go.uber.org/zap => github.com/uber-go/zap v1.10.0
+        go.uber.org/atomic => github.com/uber-go/atomic v1.4.0
+        go.uber.org/multierr => github.com/uber-go/multierr v1.1.0
+        go.uber.org/zap => github.com/uber-go/zap v1.10.0
 
-	golang.org/x/crypto => github.com/golang/crypto v0.0.0-20190605123033-f99c8df09eb5
-	golang.org/x/net => github.com/golang/net v0.0.0-20190607181551-461777fb6f67
-	golang.org/x/sync => github.com/golang/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys => github.com/golang/sys v0.0.0-20190610200419-93c9922d18ae
-	golang.org/x/text => github.com/golang/text v0.3.2
-	google.golang.org/appengine => github.com/golang/appengine v1.6.1
-	gopkg.in/fsnotify.v1 => github.com/fsnotify/fsnotify v1.4.2
-	gopkg.in/jcmturner/gokrb5.v6 => github.com/jcmturner/gokrb5 v6.0.5+incompatible
+        golang.org/x/crypto => github.com/golang/crypto v0.0.0-20190605123033-f99c8df09eb5
+        golang.org/x/net => github.com/golang/net v0.0.0-20190607181551-461777fb6f67
+        golang.org/x/sync => github.com/golang/sync v0.0.0-20190423024810-112230192c58
+        golang.org/x/sys => github.com/golang/sys v0.0.0-20190610200419-93c9922d18ae
+        golang.org/x/text => github.com/golang/text v0.3.2
+        google.golang.org/appengine => github.com/golang/appengine v1.6.1
+        gopkg.in/fsnotify.v1 => github.com/fsnotify/fsnotify v1.4.2
+        gopkg.in/jcmturner/gokrb5.v6 => github.com/jcmturner/gokrb5 v6.0.5+incompatible
 )
 EOF
 
@@ -118,4 +125,3 @@ echo "现在开始吧~~~~"
 echo "#######         cd $module;  make build run module=$module env=dev                     ######"
 echo "####### 在浏览器打开地址 http://localhost:$port/doc/list 查看接口列表     #######"
 echo "####### 在浏览器打开地址 http://localhost:$port/metrics 查看prometheus监控项     #######"
-
