@@ -1,8 +1,11 @@
 package gateway
 
 import (
+	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -42,13 +45,14 @@ type ApiContext struct {
 	Timestamp int64  `json:"timestamp"`
 	Nonce     string `json:"nonce"`
 	DeviceID  string `json:"deviceId"`
+	AppID     string `json:"appId"`
+	Partner   string `json:"partner"`
 
-	AppID   string `json:"appId"`
-	Partner string `json:"partner"`
+	ClientIP string        `json:"-"`
+	Request  *http.Request `json:"-"`
 
-	Host      string `json:"-"`
-	ClientIP  string `json:"-"`
-	UserAgent string `json:"-"`
+	// Keys is a key/value pair exclusively for the context of each request.
+	Keys map[string]interface{} `json:"-"`
 }
 
 type Handler interface {
@@ -59,12 +63,18 @@ type Pair struct {
 	First  string
 	Second string
 }
+
+type PreHandler func(*gin.Context, *ApiContext) *Resp
+
 type HandlerInfo struct {
 	reqType reflect.Type
 	// reqParaMap map[string]Pair
 	handler reflect.Type
 	// 接口签名验证时间的有效时间长度
 	expire time.Duration
+
+	// preHandler 在业务Handler 处理前，定义的预处理
+	preHandler PreHandler
 }
 
 type FieldInfo struct {

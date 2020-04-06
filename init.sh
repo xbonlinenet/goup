@@ -87,6 +87,7 @@ wget -O "pkg/cmd/$module/api/demo/echo.go" https://github.com/xbonlinenet/goup/r
 wget -O "pkg/cmd/$module/api/demo/redis.go" https://github.com/xbonlinenet/goup/raw/master/demo/redis.go
 wget -O "pkg/cmd/$module/api/demo/mysql.go" https://github.com/xbonlinenet/goup/raw/master/demo/mysql.go
 wget -O "pkg/cmd/$module/api/demo/config.go" https://github.com/xbonlinenet/goup/raw/master/demo/config.go
+wget -O "pkg/cmd/$module/api/demo/pre.go" https://github.com/xbonlinenet/goup/raw/master/demo/pre.go
 
 
 

@@ -76,12 +76,20 @@ func handlerApiRequest(c *gin.Context) {
 	}
 
 	apiContext := &ApiContext{}
-	apiContext.Host = c.Request.Host
 	apiContext.ClientIP = c.ClientIP()
-	apiContext.UserAgent = c.Request.UserAgent()
+	apiContext.Request = c.Request
 
 	// 验证请求是否在有效时间内
 	apiHandlerInfo := apiHandlerFuncMap[apiKey]
+
+	if apiHandlerInfo.preHandler != nil {
+		apiContext.Keys = make(map[string]interface{}, 4)
+		resp := apiHandlerInfo.preHandler(c, apiContext)
+		if resp != nil && resp.Code != 0 {
+			failHanler(c, http.StatusOK, resp.Code, resp.Message)
+			return
+		}
+	}
 
 	defer requestLatency.WithLabelValues(apiKey).Observe(time.Since(start).Seconds())
 	// 处理请求

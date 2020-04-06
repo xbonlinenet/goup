@@ -10,7 +10,8 @@ var (
 	apis []*API
 )
 
-func RegisterApiWithExppire(group string, key, name string, handler Handler, expire time.Duration) {
+// RegisterAPI 格式化的返回
+func RegisterAPI(group string, key, name string, handler Handler, opts ...Option) {
 
 	req, resp, reqType := getHandlerInOutParamInfo(handler)
 
@@ -30,16 +31,18 @@ func RegisterApiWithExppire(group string, key, name string, handler Handler, exp
 	if _, ok := apiHandlerFuncMap[apiKey]; ok {
 		panic(fmt.Errorf("%s already registered", key))
 	}
-	apiHandlerFuncMap[apiKey] = &HandlerInfo{
+
+	handlerInfo := &HandlerInfo{
 		reqType: reqType,
 		handler: reflect.ValueOf(handler).Type(),
-		expire:  expire,
+		expire:  10 * time.Minute,
 	}
-}
 
-// RegisterAPI 格式化的返回
-func RegisterAPI(group string, key, name string, handler Handler) {
-	RegisterApiWithExppire(group, key, name, handler, time.Minute*10)
+	for _, opt := range opts {
+		opt.apply(handlerInfo)
+	}
+
+	apiHandlerFuncMap[apiKey] = handlerInfo
 }
 
 func getHandlerInOutParamInfo(handler Handler) (in, out *DTOInfo, reqType reflect.Type) {

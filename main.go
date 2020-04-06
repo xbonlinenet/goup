@@ -26,4 +26,10 @@ func registerRounter() {
 	gateway.RegisterAPI("demo", "redis", "Demo for reids incr", demo.RedisHandler{})
 	gateway.RegisterAPI("demo", "mysql", "Demo for mysql ", demo.MysqlHandler{})
 	gateway.RegisterAPI("demo", "config", "Demo for config center ", demo.ConfigHandler{})
+	gateway.RegisterAPI("demo", "pre", "Demo for pre handler, normally used in login filter", demo.PreHandler{}, gateway.HandlerFunc(demoPreHandler))
+}
+
+func demoPreHandler(c *gin.Context, ctx *gateway.ApiContext) *gateway.Resp {
+	ctx.Keys["message"] = "This has handled by demoPreHandler"
+	return nil
 }
