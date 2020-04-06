@@ -1,6 +1,11 @@
 package util
 
-import "github.com/go-redis/redis"
+import (
+	"strconv"
+	"strings"
+
+	"github.com/go-redis/redis"
+)
 
 // CheckError 检查错误，如果有错误会 Painc
 func CheckError(err error) {
@@ -74,4 +79,31 @@ func Int64ToInterfaceSlice(s []int64) []interface{} {
 		res[i] = s[i]
 	}
 	return res
+}
+
+func VersionCompare(v1, v2 string) int {
+	v1List := strings.Split(v1, ".")
+	v2List := strings.Split(v2, ".")
+	if v1 == v2 {
+		return 0
+	}
+
+	i := 0
+	for ; i < len(v1List) && i < len(v2List); i++ {
+		n1, _ := strconv.Atoi(v1List[i])
+		n2, _ := strconv.Atoi(v2List[i])
+		if n1 < n2 {
+			return -1
+		}
+
+		if n1 > n2 {
+			return +1
+		}
+	}
+
+	if i < len(v1List) {
+		return +1
+	}
+
+	return -1
 }
