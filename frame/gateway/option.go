@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// An Option configures a Logger.
+// An Option configures
 type Option interface {
 	apply(*HandlerInfo)
 }

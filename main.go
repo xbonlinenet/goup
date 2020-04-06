@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/xbonlinenet/goup/demo"
 	"github.com/xbonlinenet/goup/frame"
@@ -8,7 +10,8 @@ import (
 )
 
 func main() {
-	frame.BootstrapServer(nil, registerRounter, customRounter, version)
+	ctx := context.Background()
+	frame.BootstrapServer(ctx, frame.BeforeServerRun(registerRounter), frame.Version(version), frame.CustomRouter(customRounter))
 }
 
 func version(c *gin.Context) {

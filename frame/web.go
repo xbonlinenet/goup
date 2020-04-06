@@ -1,6 +1,8 @@
 package frame
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame/gateway"
@@ -10,18 +12,20 @@ import (
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 )
 
-func BootstrapServer(
-	beforeInit func(),
-	berforeServerRun func(),
-	customRouter func(r *gin.Engine),
-	version func(c *gin.Context)) {
+func BootstrapServer(ctx context.Context, options ...Option) {
+
+	config := &bootstarpServerConfig{}
+
+	for _, opt := range options {
+		opt.apply(config)
+	}
+
+	if config.beforeInit != nil {
+		config.beforeInit()
+	}
 
 	InitFramework()
 	defer UnInitFramework()
-
-	if beforeInit != nil {
-		beforeInit()
-	}
 
 	r := gin.New()
 
@@ -45,14 +49,27 @@ func BootstrapServer(
 	r.Use(recovery.Recovery())
 	r.Use(gateway.APIMiddleware())
 
-	r.GET("/version", version)
+	if config.customRouter != nil {
+		config.customRouter(r)
+	}
 
-	if berforeServerRun != nil {
-		berforeServerRun()
+	if config.versionHandler != nil {
+		r.GET("/version", config.versionHandler)
+	}
+
+	if config.beforeServerRun != nil {
+		config.beforeServerRun()
 	}
 
 	addr := viper.GetString("server.addr")
 	err := r.Run(addr)
 	util.CheckError(err)
 	log.Sugar().Errorf("Occur err: %s", err.Error())
+}
+
+type bootstarpServerConfig struct {
+	beforeInit      func()
+	beforeServerRun func()
+	customRouter    func(r *gin.Engine)
+	versionHandler  func(c *gin.Context)
 }
