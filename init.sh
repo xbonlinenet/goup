@@ -25,14 +25,12 @@ fi
 parent=${array[0]}
 module=${array[1]}
 
-count=`ls |grep "$module" |wc -w`
-if [ "$count" -gt "0" ];
-then
-        echo "目录已经存在不能初始化"
+
+if [ -d "$module" ]; then
+        echo "$module 目录已经存在不能初始化"
         exit 1
-else
-        echo "go!"
 fi
+
 
 echo '第二步：输入服务端口号。端口范围 > 15000'
 
