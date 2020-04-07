@@ -32,20 +32,26 @@ func ApiList(c *gin.Context) {
 	<html>
 		<head>
 			%s
+			<title>API List</title>
 		</head>
 		<body>
-			<h3>API List</h3>
-
-			<table class="pure-table pure-table-bordered">
-			<thead><tr><th>Group</th><th>API</th><th>Description</th></tr><thead>
-			<tbody>%s</tbody>
-			</table>
+			<div class="pure-g" style="height:100%%">
+				<div class="pure-u-8-24">
+					<table class="pure-table pure-table-bordered">
+					<thead><tr><th>Group</th><th>API</th><th>Description</th></tr><thead>
+					<tbody>%s</tbody>
+					</table>
+				</div>
+				<div class="pure-u-16-24">
+					<iframe  class="pure-g" name='detail' width="100%%" height="100%%" border="0" src="%s"> </iframe>
+				</div>
+			</div>
 		</body>
 	</html>
 	`
 
-	apiGroupTemplate := `<tr><td rowspan="%d">%s</td><td><a href="./detail?name=%s">%s</a></td><td>%s</td>`
-	apiTemplate := `<tr><td><a href="./detail?name=%s">%s</a></td><td>%s</td>`
+	apiGroupTemplate := `<tr><td rowspan="%d">%s</td><td><a href="./detail?name=%s" target="detail" >%s</a></td><td>%s</td>`
+	apiTemplate := `<tr><td><a href="./detail?name=%s" target="detail" >%s</a></td><td>%s</td>`
 
 	groups := make([]GroupApi, 0)
 	for _, api := range apis {
@@ -70,8 +76,13 @@ func ApiList(c *gin.Context) {
 
 	sb := strings.Builder{}
 
+	defaultUrl := ""
+
 	for _, g := range groups {
 		for i, api := range g.Apis {
+			if len(defaultUrl) == 0 {
+				defaultUrl = "./detail?name=" + api.Group + "." + api.Key
+			}
 			if i == 0 {
 				sb.WriteString(fmt.Sprintf(apiGroupTemplate, len(g.Apis), api.Group, api.Group+"."+api.Key, url.QueryEscape(api.Key), api.Name))
 
@@ -82,7 +93,7 @@ func ApiList(c *gin.Context) {
 		}
 	}
 
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(fmt.Sprintf(html, head, sb.String())))
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(fmt.Sprintf(html, head, sb.String(), defaultUrl)))
 
 }
 
