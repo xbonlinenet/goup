@@ -11,7 +11,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	frame.BootstrapServer(ctx, frame.BeforeServerRun(registerRounter), frame.Version(version), frame.CustomRouter(customRounter))
+	frame.BootstrapServer(ctx, frame.BeforeServerRun(registerRounter), frame.Version(version), frame.CustomRouter(customRounter), frame.ReportApi("http://192.168.0.22:14000/api/doc/report"))
 }
 
 func version(c *gin.Context) {

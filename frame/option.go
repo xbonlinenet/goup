@@ -41,3 +41,10 @@ func Version(f func(c *gin.Context)) Option {
 		cfg.versionHandler = f
 	})
 }
+
+// ReportApi 上报接口到文档中心
+func ReportApi(addr string) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.reportApiDocAddr = addr
+	})
+}

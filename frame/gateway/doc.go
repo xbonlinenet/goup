@@ -16,7 +16,6 @@ const (
 	head = `
 	<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
 	<style type="text/css">
-	body {padding: 5px}
 	</style>
 	`
 )
@@ -36,22 +35,24 @@ func ApiList(c *gin.Context) {
 		</head>
 		<body>
 			<div class="pure-g" style="height:100%%">
-				<div class="pure-u-8-24">
+				<div class="pure-u-10-24">
 					<table class="pure-table pure-table-bordered">
 					<thead><tr><th>Group</th><th>API</th><th>Description</th></tr><thead>
 					<tbody>%s</tbody>
 					</table>
 				</div>
-				<div class="pure-u-16-24">
-					<iframe  class="pure-g" name='detail' width="100%%" height="100%%" border="0" src="%s"> </iframe>
+
+
+				<div class="pure-u-13-24">
+					<iframe  class="pure-g" name='detail' width="100%%" height="99%%" style="border-radius: 5px; border:1px solid #ccc!important; padding-left: 10px;" src="%s"> </iframe>
 				</div>
 			</div>
 		</body>
 	</html>
 	`
 
-	apiGroupTemplate := `<tr><td rowspan="%d">%s</td><td><a href="./detail?name=%s" target="detail" >%s</a></td><td>%s</td>`
-	apiTemplate := `<tr><td><a href="./detail?name=%s" target="detail" >%s</a></td><td>%s</td>`
+	apiGroupTemplate := `<tr><td rowspan="%d">%s</td><td><a href="./detail?name=%s" target="detail" >%s</a></td><td>%s</td></tr>`
+	apiTemplate := `<tr><td><a href="./detail?name=%s" target="detail" >%s</a></td><td>%s</td></tr>`
 
 	groups := make([]GroupApi, 0)
 	for _, api := range apis {
@@ -124,7 +125,9 @@ func ApiDetail(c *gin.Context) {
 		%s
 	</head>
 	<body>
-		<h1>%s<h1><hr/>
+		<h1>%s</h1>
+		<i>%s</i>
+		<hr/>
 		<h3>Mock:</h3>
 		<code class="pre">%s</code>
 		<div><span> %s </span>
@@ -185,11 +188,12 @@ func ApiDetail(c *gin.Context) {
 	body, err := Json.Marshal(&req)
 	util.CheckError(err)
 
-	mock := fmt.Sprintf(`<pre class="code">curl -X POST -H "Accept: application/json" -H "Content-Type: application/json" -H "Mock: true" \
+	mock := fmt.Sprintf(`<pre class="code">curl -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
 	'%s' \
-	-d'%s'</pre>`, path, string(body))
+	-d'%s' \
+	-H "Mock: true"</pre>`, path, string(body))
 
-	data := fmt.Sprintf(html, head, api.Name, mock, api.Summary, request.String(), response.String())
+	data := fmt.Sprintf(html, head, name, api.Name, mock, api.Summary, request.String(), response.String())
 
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(data))
 

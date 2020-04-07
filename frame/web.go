@@ -1,7 +1,12 @@
 package frame
 
 import (
+	"bytes"
 	"context"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -37,15 +42,6 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 
 	p.Use(r)
 
-	debug := viper.GetBool("application.debug")
-	if debug {
-		gin.SetMode("debug")
-		r.GET("/doc/list", gateway.ApiList)
-		r.GET("/doc/detail", gateway.ApiDetail)
-	} else {
-		gin.SetMode("release")
-	}
-
 	r.Use(recovery.Recovery())
 	r.Use(gateway.APIMiddleware())
 
@@ -61,6 +57,25 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		config.beforeServerRun()
 	}
 
+	debug := viper.GetBool("application.debug")
+	if debug {
+		gin.SetMode("debug")
+		r.GET("/doc/list", gateway.ApiList)
+		r.GET("/doc/detail", gateway.ApiDetail)
+
+		if len(config.reportApiDocAddr) > 0 {
+			addr := viper.GetString("server.addr")
+			p := strings.Split(addr, ":")[1]
+			port, err := strconv.ParseInt(p, 10, 64)
+			util.CheckError(err)
+
+			reportApi(viper.GetString("application.name"), port, config.reportApiDocAddr)
+		}
+
+	} else {
+		gin.SetMode("release")
+	}
+
 	addr := viper.GetString("server.addr")
 	err := r.Run(addr)
 	util.CheckError(err)
@@ -68,8 +83,47 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 }
 
 type bootstarpServerConfig struct {
-	beforeInit      func()
-	beforeServerRun func()
-	customRouter    func(r *gin.Engine)
-	versionHandler  func(c *gin.Context)
+	beforeInit       func()
+	beforeServerRun  func()
+	customRouter     func(r *gin.Engine)
+	versionHandler   func(c *gin.Context)
+	reportApiDocAddr string
+}
+
+var httpClient = &http.Client{
+	Timeout: time.Second * 5,
+}
+
+type ApiInfo struct {
+	Key  string `json:"key"`
+	Desc string `json:"desc"`
+}
+
+func reportApi(server string, port int64, reportAddr string) {
+
+	apis := gateway.GetApiList()
+
+	apiList := make([]ApiInfo, 0, len(apis))
+	for _, api := range apis {
+		apiList = append(apiList, ApiInfo{
+			Key:  api.Group + "." + api.Key,
+			Desc: api.Name,
+		})
+	}
+	params := map[string]interface{}{
+		"server":  server,
+		"port":    port,
+		"apiList": apiList,
+	}
+
+	payload, err := gateway.Json.Marshal(&params)
+	util.CheckError(err)
+
+	resp, err := httpClient.Post(reportAddr, "application/json; encoding=utf-8", bytes.NewReader(payload))
+	if err == nil {
+		resp.Body.Close()
+	} else {
+		log.Default().Sugar().Error("report doc info error", err.Error())
+	}
+
 }

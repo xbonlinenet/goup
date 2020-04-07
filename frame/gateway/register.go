@@ -10,6 +10,10 @@ var (
 	apis []*API
 )
 
+func GetApiList() []*API {
+	return apis
+}
+
 // RegisterAPI 格式化的返回
 func RegisterAPI(group string, key, name string, handler Handler, opts ...Option) {
 
