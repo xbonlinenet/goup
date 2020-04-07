@@ -55,11 +55,11 @@ mkdir -p pkg/cmd/$module/api/demo
 
 
 
-if ["$(uname)"=="Darwin"]; then
+if [ "$(uname)"=="Darwin" ]; then
 	sed_cmd="sed -i \'\'"
-elif ["$(expr substr $(uname -s) 1 5)"=="Linux"]; then
+elif [ "$(expr substr $(uname -s) 1 5)"=="Linux" ]; then
 	sed_cmd="sed -i "
-elif ["$(expr substr $(uname -s) 1 10)"=="MINGW32_NT"]; then
+elif [ "$(expr substr $(uname -s) 1 10)"=="MINGW32_NT" ]; then
 	sed_cmd="sed -i "
 fi
 
