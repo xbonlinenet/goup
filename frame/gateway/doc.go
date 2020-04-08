@@ -151,6 +151,19 @@ func ApiDetail(c *gin.Context) {
 	}
 	request.WriteString("</tbody></table>")
 
+	for _, typ := range api.Request.types {
+		request.WriteString(fmt.Sprintf("<h4>%s</h4>", typ.name))
+		request.WriteString(`
+		<table class="pure-table pure-table-bordered">
+		<thead><tr><th>FieldName</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+		<tbody>
+		`)
+		for _, f := range typ.fields {
+			request.WriteString(fmt.Sprintf(fieldTemplate, f.name, f.typ, f.required, f.desc))
+		}
+		request.WriteString("</tbody></table>")
+	}
+
 	response := strings.Builder{}
 	response.WriteString(`
 	<table class="pure-table pure-table-bordered">
