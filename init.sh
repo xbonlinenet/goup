@@ -50,6 +50,7 @@ mkdir -p conf/dev
 mkdir -p conf/test
 mkdir -p conf/product
 mkdir -p pkg/cmd/$module/api/demo
+mkdir -p pkg/cmd/$module/httptest
 
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -89,6 +90,9 @@ wget -O "pkg/cmd/$module/api/demo/config.go" https://github.com/xbonlinenet/goup
 wget -O "pkg/cmd/$module/api/demo/pre.go" https://github.com/xbonlinenet/goup/raw/master/demo/pre.go
 
 
+wget -O "pkg/cmd/$module/httptest/echo_test.go" https://github.com/xbonlinenet/goup/raw/master/httptest/echo_test.go
+$sed_cmd "s/127.0.0.1:13360/127.0.0.1:$port/g"  conf/dev/$module.yml
+
 
 cat << EOF > go.mod
 module coding.xbonline.net/$server
@@ -113,6 +117,19 @@ replace (
 )
 EOF
 
+mkdir test
+cat << EOF > test/$module.py
+
+import os
+import sys
+
+dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+ret = os.system(dir + "/bin/httptest")
+if ret != 0:
+    print("HTTP API Test Not Success")
+    sys.exit(1)
+EOF
 
 
 echo "现在通过 Makefile 编译运行你的服务吧"
