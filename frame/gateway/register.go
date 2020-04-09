@@ -118,6 +118,13 @@ func getTypeInfo(fieldType reflect.Type) []*TypeInfo {
 		field := fieldType.Field(i)
 		tag := field.Tag
 
+		if field.Anonymous {
+			info := getDTOFieldInfo(field.Type)
+			fields = append(fields, info.fields...)
+			types = append(types, info.types...)
+			continue
+		}
+
 		filedInfo := FieldInfo{
 			name:     tag.Get("json"),
 			desc:     tag.Get("desc"),
@@ -127,6 +134,11 @@ func getTypeInfo(fieldType reflect.Type) []*TypeInfo {
 		}
 
 		fields = append(fields, &filedInfo)
+
+		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+			types = append(types, getTypeInfo(field.Type.Elem())...)
+		}
+
 		if field.Type.Kind() == reflect.Struct {
 			info := getTypeInfo(field.Type)
 			types = append(types, info...)

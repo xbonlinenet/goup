@@ -151,7 +151,14 @@ func ApiDetail(c *gin.Context) {
 	}
 	request.WriteString("</tbody></table>")
 
+	requestTypeMap := map[string]bool{}
 	for _, typ := range api.Request.types {
+
+		if _, ok := requestTypeMap[typ.name]; ok {
+			continue
+		}
+		requestTypeMap[typ.name] = true
+
 		request.WriteString(fmt.Sprintf("<h4>%s</h4>", typ.name))
 		request.WriteString(`
 		<table class="pure-table pure-table-bordered">
@@ -175,7 +182,14 @@ func ApiDetail(c *gin.Context) {
 	}
 	response.WriteString("</tbody></table>")
 
+	responesTypeMap := map[string]bool{}
+
 	for _, typ := range api.Response.types {
+		if _, ok := responesTypeMap[typ.name]; ok {
+			continue
+		}
+		responesTypeMap[typ.name] = true
+
 		response.WriteString(fmt.Sprintf("<h4>%s</h4>", typ.name))
 		response.WriteString(`
 		<table class="pure-table pure-table-bordered">
