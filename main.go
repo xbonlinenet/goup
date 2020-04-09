@@ -30,6 +30,7 @@ func registerRounter() {
 	gateway.RegisterAPI("demo", "mysql", "Demo for mysql ", demo.MysqlHandler{})
 	gateway.RegisterAPI("demo", "config", "Demo for config center ", demo.ConfigHandler{})
 	gateway.RegisterAPI("demo", "pre", "Demo for pre handler, normally used in login filter", demo.PreHandler{}, gateway.HandlerFunc(demoPreHandler))
+	gateway.RegisterAPI("demo", "sleep", "Demo for sleep", demo.SleepHandler{})
 }
 
 func demoPreHandler(c *gin.Context, ctx *gateway.ApiContext) *gateway.Resp {
