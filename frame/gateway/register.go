@@ -72,6 +72,10 @@ func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
 			types = append(types, info.types...)
 			continue
 		}
+		// if field.Type.Kind() == reflect.Ptr {
+		// 	fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
+		// 	reflect.ValueOf(field.Type).Type().String())
+		// }
 
 		filedInfo := FieldInfo{
 			name:     tag.Get("json"),
@@ -83,7 +87,7 @@ func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
 
 		// fmt.Printf("%s\t%d\t%v\n", field.Type.String(), field.Type.Kind(), field.Anonymous)
 
-		if field.Type.Kind() == reflect.Slice {
+		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
 			types = append(types, getTypeInfo(field.Type.Elem())...)
 		}
 		if field.Type.Kind() == reflect.Struct {
