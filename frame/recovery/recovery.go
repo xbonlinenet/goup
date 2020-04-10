@@ -12,9 +12,9 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
-	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -53,7 +53,7 @@ func RecoveryWithWriter() gin.HandlerFunc {
 				log.Default().Error(message)
 				alter.Notify(fmt.Sprintf("%s occur error.", c.Request.URL.Path), fmt.Sprintf("%s \n %s", err, string(stack)), c.Request.URL.Path)
 				c.JSON(500, gin.H{
-					"ret":     2,
+					"code":    2,
 					"message": fmt.Errorf("%v", err),
 				})
 				c.AbortWithStatus(500)
