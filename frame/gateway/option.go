@@ -29,3 +29,9 @@ func HandlerFunc(handlerFunc PreHandler) Option {
 		handler.preHandler = handlerFunc
 	})
 }
+
+func FormParam() Option {
+	return optionFunc(func(handler *HandlerInfo) {
+		handler.pt = formType
+	})
+}
