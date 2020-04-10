@@ -57,7 +57,6 @@ type ApiContext struct {
 	Keys      map[string]interface{} `json:"-"`
 	APIConfig struct {
 		Expires time.Duration
-		APIKey  string
 	} `json:"-"`
 }
 

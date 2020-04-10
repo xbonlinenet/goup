@@ -84,7 +84,6 @@ func handlerApiRequest(c *gin.Context) {
 
 	// prehandler之前设置
 	apiContext.APIConfig.Expires = apiHandlerInfo.expire
-	apiContext.APIConfig.APIKey = apiKey
 
 	if apiHandlerInfo.preHandler != nil {
 		apiContext.Keys = make(map[string]interface{}, 4)
