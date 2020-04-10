@@ -75,12 +75,15 @@ func handlerApiRequest(c *gin.Context) {
 		return
 	}
 
-	apiContext := &ApiContext{}
+	apiContext := new(ApiContext)
 	apiContext.ClientIP = c.ClientIP()
 	apiContext.Request = c.Request
 
 	// 验证请求是否在有效时间内
 	apiHandlerInfo := apiHandlerFuncMap[apiKey]
+
+	// prehandler之前设置
+	apiContext.APIConfig.Expires = apiHandlerInfo.expire
 
 	if apiHandlerInfo.preHandler != nil {
 		apiContext.Keys = make(map[string]interface{}, 4)
@@ -94,7 +97,14 @@ func handlerApiRequest(c *gin.Context) {
 	defer requestLatency.WithLabelValues(apiKey).Observe(time.Since(start).Seconds())
 	// 处理请求
 	request := reflect.New(apiHandlerInfo.reqType).Interface()
-	err := c.BindJSON(request)
+
+	var err error
+	if apiHandlerInfo.pt == formType {
+		err = c.ShouldBindQuery(request)
+	} else {
+		err = c.BindJSON(request)
+	}
+
 	if err != nil {
 		failHanler(c, http.StatusUnauthorized, ErrInvalidParam, err.Error())
 		return

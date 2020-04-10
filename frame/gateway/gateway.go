@@ -42,17 +42,22 @@ type Resp struct {
 type ApiContext struct {
 	AppKey    string `json:"appKey"`
 	Signature string `json:"signature"`
-	Timestamp int64  `json:"timestamp"`
 	Nonce     string `json:"nonce"`
 	DeviceID  string `json:"deviceId"`
 	AppID     string `json:"appId"`
+	Host      string `json:"-"`
+	UserAgent string `json:"-"`
 	Partner   string `json:"partner"`
+	ClientIP  string `json:"-"`
 
-	ClientIP string        `json:"-"`
-	Request  *http.Request `json:"-"`
+	Timestamp int64         `json:"timestamp"`
+	Request   *http.Request `json:"-"`
 
 	// Keys is a key/value pair exclusively for the context of each request.
-	Keys map[string]interface{} `json:"-"`
+	Keys      map[string]interface{} `json:"-"`
+	APIConfig struct {
+		Expires time.Duration
+	} `json:"-"`
 }
 
 type Handler interface {
@@ -66,6 +71,13 @@ type Pair struct {
 
 type PreHandler func(*gin.Context, *ApiContext) *Resp
 
+type paramType int
+
+const (
+	jsonType paramType = 0
+	formType paramType = 1
+)
+
 type HandlerInfo struct {
 	reqType reflect.Type
 	// reqParaMap map[string]Pair
@@ -75,6 +87,7 @@ type HandlerInfo struct {
 
 	// preHandler 在业务Handler 处理前，定义的预处理
 	preHandler PreHandler
+	pt         paramType
 }
 
 type FieldInfo struct {
