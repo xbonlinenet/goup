@@ -6,9 +6,9 @@ include built/make/*.make
 export GOPROXY=https://goproxy.io
 export DATE=$(shell TZ=UTC-8 date '+%Y%m%d%H%M')
 export OUTPUT=output
-export env=product
+export env=dev
+export module=demo
 export httptest
-export module
 export GO111MODULE=on
 export CGO_ENABLED=0
 
