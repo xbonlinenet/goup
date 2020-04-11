@@ -1,6 +1,8 @@
 package demo
 
-import "github.com/xbonlinenet/goup/frame/gateway"
+import (
+	"github.com/xbonlinenet/goup/frame/gateway"
+)
 
 type EchoRequest struct {
 	Message string `json:"message" desc:"message need echo" binding:"required" `
@@ -21,5 +23,5 @@ func (h EchoHandler) Mock() interface{} {
 
 }
 func (h EchoHandler) Handler(c *gateway.ApiContext) (interface{}, error) {
-	return EchoResponse{Code: 0, Message: h.Request.Message}, nil
+	return &EchoResponse{Code: 0, Message: h.Request.Message}, nil
 }
