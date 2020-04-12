@@ -82,6 +82,7 @@ func HttpPostWithJson(url string, data interface{}, timeout time.Duration) ([]by
 		log.Default().Sugar().Warnf("Do Request %s, Error: %s", url, err.Error())
 		return []byte{}, err
 	}
+	defer resp.Body.Close()
 
 	log.Default().Sugar().Infof("Request %s, Status Code: %d", url, resp.StatusCode)
 
