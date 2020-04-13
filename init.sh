@@ -69,6 +69,7 @@ echo '现在开始下载必须的文件...'
 wget -O '.gitignore' https://github.com/xbonlinenet/goup/raw/master/.gitignore
 wget -O 'Makefile' https://github.com/xbonlinenet/goup/raw/master/Makefile
 $sed_cmd -i "s/module=demo/module=$module/g"  Makefile
+$sed_cmd -i "s/group=group/group=$parent/g"  Makefile
 
 wget -O 'built/go/env_check.py' https://github.com/xbonlinenet/goup/raw/master/built/go/env_check.py
 wget -O 'built/make/common.make' https://github.com/xbonlinenet/goup/raw/master/built/make/common.make

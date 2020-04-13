@@ -11,6 +11,7 @@ export module=demo
 export httptest
 export GO111MODULE=on
 export CGO_ENABLED=0
+export group=group
 
 
 build: init
@@ -32,6 +33,16 @@ run:
 clean:
 	@rm -rf ${OUTPUT}
 	@rm -rf release
+
+
+dtest: build
+	curl -u 'deploy:9kfdhsiw28' ftp://192.168.0.22/lvfei/ -T release/${module}.tar.gz.${DATE}
+	curl -XPOST http://192.168.0.22:14000/api/deploy/dev -d'{"group":"${group}", "module":"${module}", "file":"${module}.tar.gz.${DATE}"}'
+
+goup:
+	rm -f go.sum
+	sed -i '/github.com\/xbonlinenet\/goup/d' go.mod
+
 
 help:
 	@echo
