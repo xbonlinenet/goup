@@ -43,3 +43,12 @@ log:
       compress: true
     interval: 1h
     level: info
+  access_error:
+    logger:
+      filename: log/access_error.log
+      maxsize: 100
+      maxage: 7
+      maxbackups: 10
+      compress: true
+    interval: 1h
+    level: info    

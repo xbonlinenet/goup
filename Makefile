@@ -25,6 +25,7 @@ ifeq ($(httptest),1)
 endif
 	cd ${OUTPUT}/${module}/bin && ln -sf ${module}-$(DATE) ${module}
 
+release:
 	$(call release_app,${module})
 
 run:
@@ -36,7 +37,7 @@ clean:
 	@rm -rf release
 
 
-dtest: build
+dtest: release
 	curl -u 'deploy:9kfdhsiw28' ftp://192.168.0.22/lvfei/ -T release/${module}.tar.gz.${DATE}
 	curl -XPOST http://192.168.0.22:14000/api/deploy/dev -d'{"group":"${group}", "module":"${module}", "file":"${module}.tar.gz.${DATE}"}'
 
@@ -48,10 +49,9 @@ goup:
 help:
 	@echo
 	@echo '  Usage:'
-	@echo '    make build env=<enviroment>  module=<module-name>'
+	@echo '    make clean build env=<enviroment>  module=<module-name>'
 	@echo
 	@echo '  Enviroments:'
 	@echo '    dev'
 	@echo '    test'
-	@echo '    product[default]'
 	

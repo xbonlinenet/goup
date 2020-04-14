@@ -63,8 +63,7 @@ func handlerApiRequest(c *gin.Context) {
 			stack := recovery.Stack(3)
 			log.GetLogger("error").Sugar().Errorf("[Recovery] %s, %v\n %s", err, c.Request.URL.Path, stack)
 			alter.Notify(fmt.Sprintf("Error: %s", c.Request.URL.Path), string(stack), c.Request.URL.Path)
-			invalidRequestCounter.WithLabelValues(c.Request.URL.Path, strconv.Itoa(ErrUnknowError)).Inc()
-			c.AbortWithStatus(500)
+			failHanler(c, http.StatusInternalServerError, ErrUnknowError, string(stack))
 		}
 	}()
 
@@ -134,7 +133,7 @@ func handlerApiRequest(c *gin.Context) {
 }
 
 func failHanler(c *gin.Context, status int, code int, message string) {
-	c.JSON(status, Resp{Code: code, Message: message})
+	c.AbortWithStatusJSON(status, Resp{Code: code, Message: message})
 	invalidRequestCounter.WithLabelValues(c.Request.URL.Path, strconv.Itoa(code)).Inc()
 	log.GetLogger("access_error").Info(c.Request.URL.Path, zap.Int("code", code), zap.String("message", message), zap.String("url", c.Request.URL.String()))
 }
