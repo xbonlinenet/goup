@@ -1,6 +1,7 @@
 package util
 
 import (
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -106,4 +107,39 @@ func VersionCompare(v1, v2 string) int {
 	}
 
 	return -1
+}
+
+// ExtractIntSlice 从Slice结构体中提取整型字段的值
+func ExtractIntSlice(ss interface{}, name string) []int {
+	sv := reflect.ValueOf(ss)
+	if sv.Kind() != reflect.Slice {
+		return nil
+	}
+
+	extracted := make([]int, 0, sv.Len())
+	for i := 0; i < sv.Len(); i++ {
+		itemStructRef := sv.Index(i)
+
+		if itemStructRef.Kind() == reflect.Ptr {
+			itemStructRef = itemStructRef.Elem()
+		}
+
+		if itemStructRef.Kind() != reflect.Struct {
+			extracted = append(extracted, 0)
+			continue
+		}
+
+		fieldValRef := itemStructRef.FieldByName(name)
+		switch fieldValRef.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64:
+		case reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
+		default:
+			extracted = append(extracted, 0)
+			continue
+		}
+
+		extracted = append(extracted, int(fieldValRef.Int()))
+	}
+
+	return extracted
 }
