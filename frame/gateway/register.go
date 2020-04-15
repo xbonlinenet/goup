@@ -99,6 +99,19 @@ func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
 			types = append(types, getTypeInfo(field.Type.Elem().Elem())...)
 		}
 
+		// 处理 map[string]Foo
+		if field.Type.Kind() == reflect.Map &&
+			field.Type.Elem().Kind() == reflect.Struct {
+			types = append(types, getTypeInfo(field.Type.Elem())...)
+		}
+
+		// 处理 map[string]*Foo
+		if field.Type.Kind() == reflect.Map &&
+			field.Type.Elem().Kind() == reflect.Ptr &&
+			field.Type.Elem().Elem().Kind() == reflect.Struct {
+			types = append(types, getTypeInfo(field.Type.Elem().Elem())...)
+		}
+
 		// 处理 Foo
 		if field.Type.Kind() == reflect.Struct {
 			types = append(types, getTypeInfo(field.Type)...)
