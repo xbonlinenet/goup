@@ -82,7 +82,7 @@ func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
 		}
 
 		// 处理 *Foo
-		if field.Type.Kind() == reflect.Ptr && field.Type.Kind() == reflect.Struct {
+		if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
 			fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
 			types = append(types, getTypeInfo(field.Type.Elem())...)
 		}
