@@ -24,7 +24,12 @@ type ArrayPointer struct {
 	Hello string `json:"hello" desc:"for test map value"`
 }
 
+type BaseRequest struct {
+	UserId string `json:"userId" desc:"user id"`
+}
+
 type DocRequest struct {
+	BaseRequest
 	Message      string                      `json:"message" desc:"message need Doc" binding:"required" `
 	Pointer      *Pointer                    `json:"pointer" desc:"pointer"`
 	Map          map[string]MapValue         `json:"map" desc:"map"`
@@ -34,8 +39,9 @@ type DocRequest struct {
 }
 
 type DocResponse struct {
-	Code    int    `json:"code" desc:"0: success other: fail"`
-	Message string `json:"message" desc:"message need Doc" binding:"required" `
+	Code    int                `json:"code" desc:"0: success other: fail"`
+	Message string             `json:"message" desc:"message need Doc" binding:"required" `
+	Data    *LoginResponseData `json:"data"`
 }
 
 type DocHandler struct {

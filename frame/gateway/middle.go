@@ -13,6 +13,7 @@ import (
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/recovery"
+	"github.com/xbonlinenet/goup/frame/util"
 	"go.uber.org/zap"
 )
 
@@ -42,7 +43,8 @@ var invalidRequestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 func APIMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if i := strings.Index(c.Request.URL.Path, "/api/"); i == 0 {
-			handlerApiRequest(c)
+			wrapRequest(handlerApiRequest, c)
+			// handlerApiRequest(c)
 		} else {
 			c.Next()
 		}
@@ -74,9 +76,16 @@ func handlerApiRequest(c *gin.Context) {
 		return
 	}
 
+	reqId, level, er := getReqInfo(c)
+	util.CheckError(er)
+
 	apiContext := new(ApiContext)
 	apiContext.ClientIP = c.ClientIP()
 	apiContext.Request = c.Request
+
+	// 请求追踪
+	apiContext.ReqId = reqId
+	apiContext.ReqLevel = level + 1
 
 	// 验证请求是否在有效时间内
 	apiHandlerInfo := apiHandlerFuncMap[apiKey]

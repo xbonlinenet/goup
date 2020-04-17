@@ -55,22 +55,76 @@ func getHandlerInOutParamInfo(handler Handler) (in, out *DTOInfo, reqType reflec
 		panic("not contains Request field")
 	}
 
-	return getDTOFieldInfo(reflect.ValueOf(handler).FieldByName("Request").Type()), getDTOFieldInfo(reflect.ValueOf(handler).FieldByName("Response").Type()), req.Type
+	return getDTOFieldInfo(reflect.ValueOf(handler).FieldByName("Request").Type(), false),
+		getDTOFieldInfo(reflect.ValueOf(handler).FieldByName("Response").Type(), false), req.Type
 }
 
-func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
-
+func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 	fields := make([]*FieldInfo, 0, 10)
 	types := make([]*TypeInfo, 0)
+	name := dto.String()
+	if sub && name == "time.Time" {
+		return &DTOInfo{
+			fields: fields,
+			types:  types,
+		}
+	}
+
 	for i := 0; i < dto.NumField(); i++ {
 		field := dto.Field(i)
 		tag := field.Tag
 
 		if field.Anonymous {
-			info := getDTOFieldInfo(field.Type)
+			info := getDTOFieldInfo(field.Type, true)
 			fields = append(fields, info.fields...)
 			types = append(types, info.types...)
 			continue
+		}
+
+		// 处理 Foo
+		if field.Type.Kind() == reflect.Struct {
+			info := getDTOFieldInfo(field.Type, true)
+			types = append(types, info.types...)
+			continue
+		}
+
+		// 处理 *Foo
+		if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+			fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
+			info := getDTOFieldInfo(field.Type.Elem(), true)
+			types = append(types, info.types...)
+		}
+
+		// 处理 []Foo
+		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+			info := getDTOFieldInfo(field.Type.Elem(), true)
+			types = append(types, info.types...)
+		}
+
+		// 处理 []*Foo
+		if field.Type.Kind() == reflect.Slice &&
+			field.Type.Elem().Kind() == reflect.Ptr &&
+			field.Type.Elem().Elem().Kind() == reflect.Struct {
+
+			info := getDTOFieldInfo(field.Type.Elem().Elem(), true)
+			types = append(types, info.types...)
+		}
+
+		// 处理 map[string]Foo
+		if field.Type.Kind() == reflect.Map &&
+			field.Type.Elem().Kind() == reflect.Struct {
+			fmt.Printf("map type: %s\n", field.Type.Elem().String())
+
+			info := getDTOFieldInfo(field.Type.Elem(), true)
+			types = append(types, info.types...)
+		}
+
+		// 处理 map[string]*Foo
+		if field.Type.Kind() == reflect.Map &&
+			field.Type.Elem().Kind() == reflect.Ptr &&
+			field.Type.Elem().Elem().Kind() == reflect.Struct {
+			info := getDTOFieldInfo(field.Type.Elem().Elem(), true)
+			types = append(types, info.types...)
 		}
 
 		filedInfo := FieldInfo{
@@ -81,43 +135,15 @@ func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
 			note:     "todo for binding",
 		}
 
-		// 处理 *Foo
-		if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
-			fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
-			types = append(types, getTypeInfo(field.Type.Elem())...)
-		}
-
-		// 处理 []Foo
-		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
-			types = append(types, getTypeInfo(field.Type.Elem())...)
-		}
-
-		// 处理 []*Foo
-		if field.Type.Kind() == reflect.Slice &&
-			field.Type.Elem().Kind() == reflect.Ptr &&
-			field.Type.Elem().Elem().Kind() == reflect.Struct {
-			types = append(types, getTypeInfo(field.Type.Elem().Elem())...)
-		}
-
-		// 处理 map[string]Foo
-		if field.Type.Kind() == reflect.Map &&
-			field.Type.Elem().Kind() == reflect.Struct {
-			types = append(types, getTypeInfo(field.Type.Elem())...)
-		}
-
-		// 处理 map[string]*Foo
-		if field.Type.Kind() == reflect.Map &&
-			field.Type.Elem().Kind() == reflect.Ptr &&
-			field.Type.Elem().Elem().Kind() == reflect.Struct {
-			types = append(types, getTypeInfo(field.Type.Elem().Elem())...)
-		}
-
-		// 处理 Foo
-		if field.Type.Kind() == reflect.Struct {
-			types = append(types, getTypeInfo(field.Type)...)
-		}
-
 		fields = append(fields, &filedInfo)
+	}
+
+	if sub {
+		typeInfo := &TypeInfo{
+			name:   name,
+			fields: fields,
+		}
+		types = append([]*TypeInfo{typeInfo}, types...)
 	}
 
 	return &DTOInfo{
@@ -126,53 +152,53 @@ func getDTOFieldInfo(dto reflect.Type) *DTOInfo {
 	}
 }
 
-func getTypeInfo(fieldType reflect.Type) []*TypeInfo {
+// func getTypeInfo(fieldType reflect.Type) []*TypeInfo {
 
-	name := fieldType.String()
-	types := make([]*TypeInfo, 0)
+// 	name := fieldType.String()
+// 	types := make([]*TypeInfo, 0)
 
-	if name == "time.Time" {
-		return types
-	}
+// 	if name == "time.Time" {
+// 		return types
+// 	}
 
-	fields := make([]*FieldInfo, 0, 10)
+// 	fields := make([]*FieldInfo, 0, 10)
 
-	for i := 0; i < fieldType.NumField(); i++ {
-		field := fieldType.Field(i)
-		tag := field.Tag
+// 	for i := 0; i < fieldType.NumField(); i++ {
+// 		field := fieldType.Field(i)
+// 		tag := field.Tag
 
-		if field.Anonymous {
-			info := getDTOFieldInfo(field.Type)
-			fields = append(fields, info.fields...)
-			types = append(types, info.types...)
-			continue
-		}
+// 		if field.Anonymous {
+// 			info := getDTOFieldInfo(field.Type)
+// 			fields = append(fields, info.fields...)
+// 			types = append(types, info.types...)
+// 			continue
+// 		}
 
-		filedInfo := FieldInfo{
-			name:     tag.Get("json"),
-			desc:     tag.Get("desc"),
-			typ:      field.Type.String(),
-			required: true,
-			note:     "todo for binding",
-		}
+// 		filedInfo := FieldInfo{
+// 			name:     tag.Get("json"),
+// 			desc:     tag.Get("desc"),
+// 			typ:      field.Type.String(),
+// 			required: true,
+// 			note:     "todo for binding",
+// 		}
 
-		fields = append(fields, &filedInfo)
+// 		fields = append(fields, &filedInfo)
 
-		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
-			types = append(types, getTypeInfo(field.Type.Elem())...)
-		}
+// 		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+// 			types = append(types, getTypeInfo(field.Type.Elem())...)
+// 		}
 
-		if field.Type.Kind() == reflect.Struct {
-			info := getTypeInfo(field.Type)
-			types = append(types, info...)
-		}
-	}
+// 		if field.Type.Kind() == reflect.Struct {
+// 			info := getTypeInfo(field.Type)
+// 			types = append(types, info...)
+// 		}
+// 	}
 
-	typeInfo := &TypeInfo{
-		name:   name,
-		fields: fields,
-	}
-	types = append([]*TypeInfo{typeInfo}, types...)
+// 	typeInfo := &TypeInfo{
+// 		name:   name,
+// 		fields: fields,
+// 	}
+// 	types = append([]*TypeInfo{typeInfo}, types...)
 
-	return types
-}
+// 	return types
+// }

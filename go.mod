@@ -36,6 +36,8 @@ require (
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/uuid v1.1.1
+	github.com/hpcloud/tail v1.0.0
 	github.com/imkira/go-interpol v1.1.0 // indirect
 	github.com/jinzhu/gorm v1.9.10
 	github.com/json-iterator/go v1.1.6
@@ -45,7 +47,9 @@ require (
 	github.com/olivere/elastic/v7 v7.0.13
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v0.9.3
+	github.com/satori/go.uuid v1.2.0
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cast v1.3.0

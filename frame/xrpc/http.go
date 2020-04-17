@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
+	"github.com/xbonlinenet/goup/frame/gateway"
 	"github.com/xbonlinenet/goup/frame/log"
-	"golang.org/x/net/context"
+	"github.com/xbonlinenet/goup/frame/perf"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -51,7 +53,7 @@ func initHttpClient() {
 
 var Json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-func HttpPostWithJson(url string, data interface{}, timeout time.Duration) ([]byte, error) {
+func HttpPostWithJson(c *gateway.ApiContext, url string, data interface{}, timeout time.Duration) ([]byte, error) {
 	initHttpClient()
 
 	start := time.Now()
@@ -62,15 +64,15 @@ func HttpPostWithJson(url string, data interface{}, timeout time.Duration) ([]by
 		return []byte{}, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(reqBytes))
+	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", url, bytes.NewReader(reqBytes))
 	if err != nil {
 		log.Default().Sugar().Errorf("New Request Error: %s", err.Error())
 
 		return []byte{}, err
 	}
+
+	req.Header.Add(perf.ReqIdKey, c.ReqId)
+	req.Header.Add(perf.ReqLevel, strconv.Itoa(c.ReqLevel+1))
 
 	host := req.URL.Hostname()
 	path := req.URL.Path

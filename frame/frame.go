@@ -1,7 +1,6 @@
 package frame
 
 import (
-	"github.com/xbonlinenet/goup/frame/cc"
 	"context"
 	"encoding/json"
 	"flag"
@@ -10,13 +9,15 @@ import (
 	"path"
 	"time"
 
+	"github.com/xbonlinenet/goup/frame/cc"
+
+	"github.com/go-errors/errors"
+	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/dyncfg"
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/util"
-	"github.com/go-errors/errors"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -65,9 +66,11 @@ func InitFramework() {
 
 	log.Default().Info(fmt.Sprintf("config: %s", v))
 
+	util.InitGlobeInfo()
 	data.InitSQLMgr()
 	data.InitRedisMgr()
 	data.InitESMgr()
+	data.InitKafka(ctx)
 
 	users := viper.GetStringSlice("alter.users")
 	if len(users) > 0 {

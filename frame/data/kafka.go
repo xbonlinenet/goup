@@ -1,13 +1,22 @@
 package data
 
 import (
+	"context"
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	cluster "github.com/bsm/sarama-cluster"
 	"github.com/spf13/viper"
+	"github.com/xbonlinenet/goup/frame/log"
 )
+
+var kafkaCtx context.Context
+
+func InitKafka(ctx context.Context) {
+	kafkaCtx = ctx
+}
 
 // ErrKafkaNoBrokers brokers 未配置错误
 var ErrKafkaNoBrokers = errors.New("Brokers not configed")
@@ -59,6 +68,56 @@ func NewProducer() (sarama.SyncProducer, error) {
 	config.Producer.Retry.Max = 5
 	config.Producer.Return.Successes = true
 	return sarama.NewSyncProducer(brokers, config)
+}
+
+// NewProducer 创建 kafka 生产者 异步
+func NewAsyncProducer() (sarama.AsyncProducer, error) {
+	brokers := viper.GetStringSlice("data.kafka.brokers")
+	if len(brokers) == 0 {
+		return nil, ErrKafkaNoBrokers
+	}
+
+	config := sarama.NewConfig()
+	config.Version = sarama.V0_11_0_0
+	config.Producer.Compression = sarama.CompressionLZ4
+	config.Producer.Retry.Max = 5
+	config.Producer.Return.Successes = true
+	return sarama.NewAsyncProducer(brokers, config)
+}
+
+var aSyncProducer sarama.AsyncProducer
+var aonce sync.Once
+
+func MustGetAsyncProducer() sarama.AsyncProducer {
+	if aSyncProducer != nil {
+		return aSyncProducer
+	}
+
+	aonce.Do(func() {
+		producer, err := NewAsyncProducer()
+		if err != nil {
+			panic(err)
+		}
+		aSyncProducer = producer
+
+		go func() {
+			for {
+				select {
+
+				case <-kafkaCtx.Done():
+					break
+				case err := <-producer.Errors():
+					log.Default().Sugar().Errorf("producer error: %s ", err.Error())
+				}
+			}
+		}()
+	})
+
+	if aSyncProducer == nil {
+		panic(errors.New("global aSyncProducer not inited."))
+	}
+
+	return aSyncProducer
 }
 
 func KafkaConsume(signals chan os.Signal, topic, groupID string, errCallback func(err error), callback func(msgBytes []byte)) {

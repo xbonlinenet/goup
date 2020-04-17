@@ -29,9 +29,11 @@ func (h SleepHandler) Mock() interface{} {
 
 func (h SleepHandler) Handler(c *gateway.ApiContext) (interface{}, error) {
 
-	time.Sleep(time.Duration(h.Request.Seconds) * time.Second)
+	gateway.WrapFunc(c, func() {
+		time.Sleep(time.Duration(h.Request.Seconds) * time.Second)
+	})
 
-	data, err := xrpc.HttpPostWithJson("http://localhost:13360/api/demo/echo", map[string]interface{}{"message": "Test"}, time.Second)
+	data, err := xrpc.HttpPostWithJson(c, "http://localhost:13360/api/demo/echo", map[string]interface{}{"message": "Test"}, time.Second)
 	util.CheckError(err)
 	log.Default().Sugar().Infof("echo result : %s", string(data))
 	return SleepResponse{Code: 0}, nil

@@ -53,6 +53,10 @@ type ApiContext struct {
 	Timestamp int64         `json:"timestamp"`
 	Request   *http.Request `json:"-"`
 
+	// For trace req
+	ReqId    string `json:"-"`
+	ReqLevel int    `json:"-"`
+
 	// Keys is a key/value pair exclusively for the context of each request.
 	Keys      map[string]interface{} `json:"-"`
 	APIConfig struct {
