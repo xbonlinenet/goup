@@ -25,10 +25,10 @@ ifeq ($(httptest),1)
 endif
 	cd ${OUTPUT}/${module}/bin && ln -sf ${module}-$(DATE) ${module}
 
-release:
+release: build
 	$(call release_app,${module})
 
-run:
+run: build
 	cd ${OUTPUT}/${module} && ./bin/${module} --config conf/application.yml
 
 
