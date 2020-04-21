@@ -12,7 +12,7 @@ export GO111MODULE=on
 export CGO_ENABLED=0
 export group=group
 
-DATE="$(shell TZ=UTC-8 date '+%Y%m%d%H%M')"
+DATE=$(shell TZ=UTC-8 date '+%Y%m%d%H%M')
 
 
 build: init
