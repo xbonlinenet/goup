@@ -36,6 +36,7 @@ type DocRequest struct {
 	MapPointer   map[string]*MapValuePointer `json:"mapPointer" desc:"mapPointer"`
 	Array        []Array                     `json:"array" desc:"array"`
 	ArrayPointer []*ArrayPointer             `json:"arrayPointer" desc:"array"`
+	MapInterface map[string]interface{}      `json:"mapInterface" desc:"mapInterface"`
 }
 
 type DocResponse struct {

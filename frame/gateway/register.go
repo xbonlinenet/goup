@@ -70,6 +70,13 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 		}
 	}
 
+	if dto.Kind() == reflect.Interface {
+		return &DTOInfo{
+			fields: fields,
+			types:  types,
+		}
+	}
+
 	for i := 0; i < dto.NumField(); i++ {
 		field := dto.Field(i)
 		tag := field.Tag

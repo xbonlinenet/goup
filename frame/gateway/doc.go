@@ -211,8 +211,14 @@ func ApiDetail(c *gin.Context) {
 
 	req := reflect.New(api.ReqType).Interface()
 	err := faker.FakeData(&req)
-	util.CheckError(err)
-	body, err := Json.Marshal(&req)
+	var body []byte
+	if err != nil {
+		body = []byte(fmt.Sprintf("unsupport faker type: %s", err.Error()))
+		err = nil
+	} else {
+		body, err = Json.Marshal(&req)
+
+	}
 	util.CheckError(err)
 
 	mock := fmt.Sprintf(`<pre class="code">curl -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
