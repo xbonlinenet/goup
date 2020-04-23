@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
@@ -93,15 +94,6 @@ func handlerApiRequest(c *gin.Context) {
 	// prehandler之前设置
 	apiContext.APIConfig.Expires = apiHandlerInfo.expire
 
-	if apiHandlerInfo.preHandler != nil {
-		apiContext.Keys = make(map[string]interface{}, 4)
-		resp := apiHandlerInfo.preHandler(c, apiContext)
-		if resp != nil && resp.Code != 0 {
-			failHanler(c, http.StatusOK, resp.Code, resp.Message)
-			return
-		}
-	}
-
 	defer requestLatency.WithLabelValues(apiKey).Observe(time.Since(start).Seconds())
 	// 处理请求
 	request := reflect.New(apiHandlerInfo.reqType).Interface()
@@ -110,7 +102,20 @@ func handlerApiRequest(c *gin.Context) {
 	if apiHandlerInfo.pt == formType {
 		err = c.ShouldBindQuery(request)
 	} else {
-		err = c.BindJSON(request)
+		if apiHandlerInfo.preHandler != nil {
+			err = c.ShouldBindBodyWith(request, binding.JSON)
+		} else {
+			err = c.BindJSON(request)
+		}
+	}
+
+	if apiHandlerInfo.preHandler != nil {
+		apiContext.Keys = make(map[string]interface{}, 4)
+		resp := apiHandlerInfo.preHandler(c, apiContext)
+		if resp != nil && resp.Code != 0 {
+			failHanler(c, http.StatusOK, resp.Code, resp.Message)
+			return
+		}
 	}
 
 	if err != nil {

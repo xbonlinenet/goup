@@ -13,6 +13,7 @@ import (
 	"github.com/xbonlinenet/goup/frame/gateway"
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/perf"
+	"golang.org/x/net/context"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -64,7 +65,10 @@ func HttpPostWithJson(c *gateway.ApiContext, url string, data interface{}, timeo
 		return []byte{}, err
 	}
 
-	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", url, bytes.NewReader(reqBytes))
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(reqBytes))
 	if err != nil {
 		log.Default().Sugar().Errorf("New Request Error: %s", err.Error())
 

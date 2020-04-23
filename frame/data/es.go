@@ -121,10 +121,10 @@ func (mgr *ESClientMgr) Close() {
 }
 
 func initESClient(config *viper.Viper, name string) (*elastic.Client, error) {
-	host := config.GetString("url")
+	host := config.GetStringSlice("url")
 	//var host = "http://ad.com:9200/"
 	esClient, err := elastic.NewClient(
-		elastic.SetURL(host),
+		elastic.SetURL(host...),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheckInterval(10*time.Second),
 		elastic.SetGzip(true),
