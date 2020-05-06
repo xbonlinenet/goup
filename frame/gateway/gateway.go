@@ -89,9 +89,10 @@ type HandlerInfo struct {
 	// 接口签名验证时间的有效时间长度
 	expire time.Duration
 
-	// preHandler 在业务Handler 处理前，定义的预处理
-	preHandler PreHandler
-	pt         paramType
+	// preHandlers 在业务Handler 处理前，定义的预处理
+	preHandlers []PreHandler
+
+	pt          paramType
 }
 
 type FieldInfo struct {

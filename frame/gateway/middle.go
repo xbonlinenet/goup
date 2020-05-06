@@ -102,19 +102,22 @@ func handlerApiRequest(c *gin.Context) {
 	if apiHandlerInfo.pt == formType {
 		err = c.ShouldBindQuery(request)
 	} else {
-		if apiHandlerInfo.preHandler != nil {
+		if len(apiHandlerInfo.preHandlers) != 0 {
 			err = c.ShouldBindBodyWith(request, binding.JSON)
 		} else {
 			err = c.BindJSON(request)
 		}
 	}
 
-	if apiHandlerInfo.preHandler != nil {
+	if len(apiHandlerInfo.preHandlers) != 0 {
 		apiContext.Keys = make(map[string]interface{}, 4)
-		resp := apiHandlerInfo.preHandler(c, apiContext)
-		if resp != nil && resp.Code != 0 {
-			failHanler(c, http.StatusOK, resp.Code, resp.Message)
-			return
+
+		for _, handler := range apiHandlerInfo.preHandlers {
+			resp := handler(c, apiContext)
+			if resp != nil && resp.Code != 0 {
+				failHanler(c, http.StatusOK, resp.Code, resp.Message)
+				return
+			}
 		}
 	}
 
