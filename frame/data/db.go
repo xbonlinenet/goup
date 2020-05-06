@@ -18,6 +18,10 @@ import (
 	"github.com/xbonlinenet/goup/frame/util"
 )
 
+const (
+	checkDBHostIPInterval = time.Second * 5
+)
+
 var (
 	// ErrSQLConfig 配置错误
 	ErrSQLConfig = errors.New("sql Cfg error")
@@ -82,7 +86,7 @@ func newSQLDBMgr(conf *viper.Viper) *SQLDBMgr {
 	}
 
 	// start monitoring db host ip
-	go dbMgr.monitorDBIP(time.Second * 5)
+	go dbMgr.monitorDBIP(checkDBHostIPInterval)
 
 	return dbMgr
 }
