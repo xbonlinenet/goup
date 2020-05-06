@@ -1,33 +1,44 @@
 package data
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"net"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/xbonlinenet/goup/frame/log"
-	"github.com/xbonlinenet/goup/frame/util"
-	_ "github.com/go-sql-driver/mysql" // 必须包含 mysql 的驱动
+	"github.com/go-sql-driver/mysql" // apply mysql driver
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+
+	"github.com/xbonlinenet/goup/frame/log"
+	"github.com/xbonlinenet/goup/frame/util"
+)
+
+const (
+	checkDBHostIPInterval = time.Second * 5
+)
+
+var (
+	// ErrSQLConfig 配置错误
+	ErrSQLConfig = errors.New("sql Cfg error")
+
+	// ErrSQLNotInited 还未初始化
+	ErrSQLNotInited = errors.New("sql not inited")
 )
 
 var sqlMgr *SQLDBMgr
 
-// ErrSQLConfig 配置错误
-var ErrSQLConfig = errors.New("sql config error")
-
-// ErrSQLNotInited Redis 还未初始化
-var ErrSQLNotInited = errors.New("sql not inited")
-
-// InitSQLMgr 初始化 Redis
+// InitSQLMgr 初始化 sqlMgr
 func InitSQLMgr() {
 	sqlMgr = newSQLDBMgr(viper.Sub("data.mysql"))
 }
 
-// UninitSQLMgr 反初始化 Redis 相关
-func UninitSQLMgr() {
+// UnInitSQLMgr 反初始化 sqlMgr 相关
+func UnInitSQLMgr() {
 	if sqlMgr != nil {
 		sqlMgr.Close()
 		sqlMgr = nil
@@ -52,21 +63,40 @@ func MustGetDB(name string) *gorm.DB {
 	return sqlMgr.mustGetDB(name)
 }
 
+type dbConn struct {
+	DB     *gorm.DB
+	Cfg    *mysql.Config
+	AddrIP net.IP
+}
+
+func (c *dbConn) Close() error {
+	if c.DB != nil {
+		return c.DB.Close()
+	}
+
+	return nil
+}
+
 // newSQLDBMgr 根据配置创建新的数据库连接管理
 func newSQLDBMgr(conf *viper.Viper) *SQLDBMgr {
 	dbMgr := &SQLDBMgr{
-		dbMap:    make(map[string]*gorm.DB),
+		connMap:  make(map[string]*dbConn),
 		mutex:    &sync.Mutex{},
 		dbConfig: conf,
 	}
+
+	// start monitoring db host ip
+	go dbMgr.monitorDBIP(checkDBHostIPInterval)
+
 	return dbMgr
 }
 
 // SQLDBMgr 数据库连接管理
 type SQLDBMgr struct {
-	dbMap    map[string]*gorm.DB
+	connMap  map[string]*dbConn
 	mutex    *sync.Mutex
 	dbConfig *viper.Viper
+	isClosed bool
 }
 
 // getDB 根据名称获取数据库连接
@@ -79,38 +109,24 @@ func (mgr *SQLDBMgr) getDB(name string) (*gorm.DB, error) {
 	mgr.mutex.Lock()
 	defer mgr.mutex.Unlock()
 
-	db, ok := mgr.dbMap[name]
+	conn, ok := mgr.connMap[name]
 	if ok {
-		return db, nil
+		return conn.DB, nil
 	}
 
-	db, err := initDB(config, name)
+	conn, err := initDBConn(config, name)
 	if err != nil {
 		return nil, err
 	}
-	mgr.dbMap[name] = db
-	return db, nil
+
+	mgr.connMap[name] = conn
+	return conn.DB, nil
 }
 
 // mustGetDB 根据名称获取数据库连接
 func (mgr *SQLDBMgr) mustGetDB(name string) *gorm.DB {
-	config := mgr.dbConfig.Sub(name)
-	if config == nil {
-		panic(ErrSQLConfig)
-	}
-
-	mgr.mutex.Lock()
-	defer mgr.mutex.Unlock()
-
-	db, ok := mgr.dbMap[name]
-	if ok {
-		return db
-	}
-
-	db, err := initDB(config, name)
+	db, err := mgr.getDB(name)
 	util.CheckError(err)
-
-	mgr.dbMap[name] = db
 	return db
 }
 
@@ -118,10 +134,84 @@ func (mgr *SQLDBMgr) mustGetDB(name string) *gorm.DB {
 func (mgr *SQLDBMgr) Close() {
 	mgr.mutex.Lock()
 	defer mgr.mutex.Unlock()
-	for _, db := range mgr.dbMap {
-		db.Close()
+
+	for _, conn := range mgr.connMap {
+		if closeErr := conn.Close(); closeErr != nil {
+			log.Default().Error("closeConnErr", zap.Error(closeErr))
+		}
 	}
-	mgr.dbMap = make(map[string]*gorm.DB)
+
+	mgr.connMap = make(map[string]*dbConn)
+	mgr.isClosed = true
+}
+
+func (mgr *SQLDBMgr) updateDBConn(name string) error {
+	oldConn, ok := mgr.connMap[name]
+	if !ok {
+		return errors.New("oldConn not found")
+	}
+
+	config := mgr.dbConfig.Sub(name)
+	if config == nil {
+		return ErrSQLConfig
+	}
+
+	newConn, err := initDBConn(config, name)
+	if err != nil {
+		return err
+	}
+
+	mgr.mutex.Lock()
+
+	if !mgr.isClosed {
+		mgr.connMap[name] = newConn
+		log.Default().Info(
+			"updateDBConn",
+			zap.String("name", name),
+			zap.String("old_ip", oldConn.AddrIP.String()),
+			zap.String("new_ip", newConn.AddrIP.String()),
+		)
+	}
+
+	mgr.mutex.Unlock()
+
+	if err = oldConn.Close(); err != nil {
+		log.Default().Error("close old conn err", zap.Error(err))
+	}
+
+	return nil
+}
+
+// monitorDBIP 监控域名的 IP 是否发生变化
+func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
+	for !mgr.isClosed {
+
+		var waitUpdate []string
+
+		// iter over connections and check ip
+		for dbName, dbConn := range mgr.connMap {
+			addrIP, err := lookupAddrIP(dbConn.Cfg.Addr)
+			if err != nil {
+				log.Default().Error("LookupIPErr", zap.String("Addr", dbConn.Cfg.Addr), zap.Error(err))
+				continue
+			}
+
+			// compare to current conn ip
+			if !bytes.Equal(dbConn.AddrIP, addrIP) {
+				waitUpdate = append(waitUpdate, dbName)
+			}
+		}
+
+		// update connections
+		for _, dbName := range waitUpdate {
+			if err := mgr.updateDBConn(dbName); err != nil {
+				log.Default().Error("UpdateConnErr", zap.String("name", dbName), zap.Error(err))
+			}
+		}
+
+		// sleep period
+		time.Sleep(period)
+	}
 }
 
 func initDB(config *viper.Viper, name string) (*gorm.DB, error) {
@@ -146,6 +236,52 @@ func initDB(config *viper.Viper, name string) (*gorm.DB, error) {
 	if err := db.DB().Ping(); err != nil {
 		return db, err
 	}
-	log.Default().Info(fmt.Sprintf("%s db: maxIdleConn:%d, maxOpenConn: %d", name, maxIdleConn, maxOpenConn))
+	log.Default().Info(fmt.Sprintf("%s DB: maxIdleConn:%d, maxOpenConn: %d", name, maxIdleConn, maxOpenConn))
 	return db, nil
+}
+
+func initDBConn(config *viper.Viper, name string) (*dbConn, error) {
+	dbDSN := config.GetString("url")
+	dbCfg, err := mysql.ParseDSN(dbDSN)
+
+	if err != nil {
+		return nil, err
+	}
+
+	addrIP, err := lookupAddrIP(dbCfg.Addr)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := initDB(config, name)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := &dbConn{
+		DB:     db,
+		Cfg:    dbCfg,
+		AddrIP: addrIP,
+	}
+
+	return conn, nil
+}
+
+func lookupAddrIP(addr string) ([]byte, error) {
+
+	// parse host from addr
+	addrSplits := strings.Split(addr, ":")
+	addrHost := addrSplits[0]
+
+	// lookup IP by host
+	addrIPs, err := net.LookupIP(addrHost)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(addrIPs) == 0 {
+		return nil, errors.New("no IP")
+	}
+
+	return addrIPs[0], nil
 }

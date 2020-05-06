@@ -114,7 +114,7 @@ func UnInitFramework() {
 	cost := time.Now().Unix() - start
 	log.Default().Info(fmt.Sprintf("Total Cost: %d", cost))
 	cc.UnInitConfigCenter()
-	data.UninitSQLMgr()
+	data.UnInitSQLMgr()
 	data.UninitRedisMgr()
 	data.UninitESMgr()
 
