@@ -147,7 +147,24 @@ func handlerApiRequest(c *gin.Context) {
 }
 
 func failHanler(c *gin.Context, status int, code int, message string) {
-	c.AbortWithStatusJSON(status, Resp{Code: code, Message: message})
+
+	ua := c.Request.UserAgent()
+
+	if 0 == strings.Index(ua, "curl") {
+		sb := strings.Builder{}
+		sb.WriteString("为了方便调试：curl 请求异常时返回内容不是json， 而是纯文本\n")
+		sb.WriteString("\n")
+		sb.WriteString(fmt.Sprintf("Code: %d\n", code))
+		sb.WriteString("\n")
+		sb.WriteString(message)
+		sb.WriteString("\n")
+
+		c.Data(status, "text/plain charset=utf-8", []byte(sb.String()))
+		c.Abort()
+	} else {
+		c.AbortWithStatusJSON(status, Resp{Code: code, Message: message})
+
+	}
 	invalidRequestCounter.WithLabelValues(c.Request.URL.Path, strconv.Itoa(code)).Inc()
 	log.GetLogger("access_error").Info(c.Request.URL.Path, zap.Int("code", code), zap.String("message", message), zap.String("url", c.Request.URL.String()))
 }
