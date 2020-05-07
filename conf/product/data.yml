@@ -1,7 +1,7 @@
 data:
   mysql:
     demo:
-      url: test:test@tcp(192.168.0.22:3306)/goup?parseTime=True&loc=Local&multiStatements=true&charset=utf8
+      url: test:test@tcp(192.168.0.22:3306)/goup?parseTime=True&loc=Local&multiStatements=true&charset=utf8mb4
       max-idle-conn: 50
       max-open-conn: 50
   
