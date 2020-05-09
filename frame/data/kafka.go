@@ -103,7 +103,8 @@ func MustGetAsyncProducer() sarama.AsyncProducer {
 		go func() {
 			for {
 				select {
-
+				case <-producer.Successes():
+					log.Default().Sugar().Infof("producer success")
 				case <-kafkaCtx.Done():
 					break
 				case err := <-producer.Errors():
