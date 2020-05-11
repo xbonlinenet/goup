@@ -2,6 +2,7 @@ package xrpc
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
@@ -147,7 +148,7 @@ func HttpPostWithOptions(
 
 	log.Default().Sugar().Infof("Request %s, Status Code: %d", url, resp.StatusCode)
 
-	return nil, nil
+	return ioutil.ReadAll(resp.Body)
 }
 
 func HttpPostWithJson(
