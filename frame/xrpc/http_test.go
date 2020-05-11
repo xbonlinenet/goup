@@ -46,7 +46,7 @@ func TestHttpPostWithJson(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := HttpPostWithJson(tt.args.url, tt.args.data, tt.args.timeout)
+			got, err := HttpPostWithJson(nil, tt.args.url, tt.args.data, tt.args.timeout)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("HttpPostWithJson() error = %v, wantErr %v", err, tt.wantErr)
 				return
