@@ -33,6 +33,7 @@ const (
 	DefaultTimeout = 10 * time.Second
 )
 
+// RequestOptions 请求设置
 type RequestOptions struct {
 	// 超时时间
 	Timeout time.Duration
@@ -91,6 +92,9 @@ func initHttpClient() {
 
 var Json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+// HttpPostWithOptions
+//     headers := map[string]string{"X-Key": "val"}
+//     respBytes, err := HttpPostWithOptions(ctx, url, data, WithTimeout(10*time.Second), WithHeaders(headers))
 func HttpPostWithOptions(
 	c *gateway.ApiContext, url string, data interface{}, options ...RequestOption) ([]byte, error) {
 
