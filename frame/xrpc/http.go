@@ -10,12 +10,13 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
-	"github.com/xbonlinenet/goup/frame/gateway"
-	"github.com/xbonlinenet/goup/frame/log"
-	"github.com/xbonlinenet/goup/frame/perf"
 	"golang.org/x/net/context"
 
 	jsoniter "github.com/json-iterator/go"
+
+	"github.com/xbonlinenet/goup/frame/gateway"
+	"github.com/xbonlinenet/goup/frame/log"
+	"github.com/xbonlinenet/goup/frame/perf"
 )
 
 // requestLatency 接口延迟
@@ -26,7 +27,43 @@ var requestLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 
 func init() {
 	prometheus.MustRegister(requestLatency)
+}
 
+const (
+	DefaultTimeout = 10 * time.Second
+)
+
+type RequestOptions struct {
+	// 超时时间
+	Timeout time.Duration
+
+	// Headers
+	Headers map[string]string
+}
+
+// options abs
+type RequestOption interface {
+	apply(options *RequestOptions)
+}
+
+type ApplyOption func(*RequestOptions)
+
+func (f ApplyOption) apply(options *RequestOptions) {
+	f(options)
+}
+
+func WithHeaders(headers map[string]string) RequestOption {
+	return ApplyOption(func(options *RequestOptions) {
+		for key, val := range headers {
+			options.Headers[key] = val
+		}
+	})
+}
+
+func WithTimeout(timeout time.Duration) RequestOption {
+	return ApplyOption(func(options *RequestOptions) {
+		options.Timeout = timeout
+	})
 }
 
 var initHttClientOnce sync.Once
@@ -54,18 +91,30 @@ func initHttpClient() {
 
 var Json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-func HttpPostWithJson(c *gateway.ApiContext, url string, data interface{}, timeout time.Duration) ([]byte, error) {
+func HttpPostWithOptions(
+	c *gateway.ApiContext, url string, data interface{}, options ...RequestOption) ([]byte, error) {
+
 	initHttpClient()
 
 	start := time.Now()
 
+	reqOpts := RequestOptions{
+		Timeout: DefaultTimeout,
+		Headers: make(map[string]string, 4),
+	}
+
+	// apply options
+	for _, option := range options {
+		option.apply(&reqOpts)
+	}
+
 	reqBytes, err := Json.Marshal(&data)
 	if err != nil {
-		log.Default().Sugar().Errorf("Requst data Marshal json error: %s", err.Error())
+		log.Default().Sugar().Errorf("Request Data Marshal json error: %s", err.Error())
 		return []byte{}, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), reqOpts.Timeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(reqBytes))
@@ -75,8 +124,15 @@ func HttpPostWithJson(c *gateway.ApiContext, url string, data interface{}, timeo
 		return []byte{}, err
 	}
 
-	req.Header.Add(perf.ReqIdKey, c.ReqId)
-	req.Header.Add(perf.ReqLevel, strconv.Itoa(c.ReqLevel+1))
+	if c != nil {
+		req.Header.Add(perf.ReqIdKey, c.ReqId)
+		req.Header.Add(perf.ReqLevel, strconv.Itoa(c.ReqLevel+1))
+	}
+
+	// attach option headers
+	for k, v := range reqOpts.Headers {
+		req.Header.Add(k, v)
+	}
 
 	host := req.URL.Hostname()
 	path := req.URL.Path
@@ -93,4 +149,10 @@ func HttpPostWithJson(c *gateway.ApiContext, url string, data interface{}, timeo
 	log.Default().Sugar().Infof("Request %s, Status Code: %d", url, resp.StatusCode)
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func HttpPostWithJson(
+	c *gateway.ApiContext, url string, data interface{}, timeout time.Duration) ([]byte, error) {
+
+	return HttpPostWithOptions(c, url, data, WithTimeout(timeout))
 }

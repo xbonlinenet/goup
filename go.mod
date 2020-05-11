@@ -66,6 +66,7 @@ require (
 	github.com/zsais/go-gin-prometheus v0.0.0-20181030200533-58963fb32f54
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
+	golang.org/x/text v0.3.2
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
