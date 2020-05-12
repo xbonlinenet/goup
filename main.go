@@ -34,7 +34,13 @@ func customRouter(r *gin.Engine) {
 }
 
 func registerRouter() {
+	ilikeCORSHandler := gateway.NewCORSHandler([]string{"www.ilikee.vn", "ilikee.vn", "0.0.0.0:8000"})
+
 	gateway.RegisterAPI("demo", "echo", "Demo for echo", demo.EchoHandler{})
+	gateway.RegisterAPI("demo", "cors_echo", "Demo for cors",
+		demo.EchoHandler{},
+		gateway.WithCORSHandler(ilikeCORSHandler),
+	)
 	gateway.RegisterAPI("demo", "redis", "Demo for reids incr", demo.RedisHandler{})
 	gateway.RegisterAPI("demo", "mysql", "Demo for mysql ", demo.MysqlHandler{})
 	gateway.RegisterAPI("demo", "config", "Demo for config center ", demo.ConfigHandler{})

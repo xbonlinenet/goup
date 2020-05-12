@@ -11,11 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
+
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/recovery"
 	"github.com/xbonlinenet/goup/frame/util"
-	"go.uber.org/zap"
 )
 
 var (
@@ -66,14 +67,27 @@ func handlerApiRequest(c *gin.Context) {
 			stack := recovery.Stack(3)
 			log.GetLogger("error").Sugar().Errorf("[Recovery] %s, %v\n %s", err, c.Request.URL.Path, stack)
 			alter.Notify(fmt.Sprintf("Error: %s", c.Request.URL.Path), string(stack), c.Request.URL.Path)
-			failHanler(c, http.StatusInternalServerError, ErrUnknowError, string(stack))
+			failHandler(c, http.StatusInternalServerError, ErrUnknowError, string(stack))
 		}
 	}()
 
 	// 判断是否有路由可以处理
 	apiKey := getAPIKey(c.Request.URL.Path)
-	if _, ok := apiHandlerFuncMap[apiKey]; !ok {
+	apiHandlerInfo, ok := apiHandlerFuncMap[apiKey]
+	if !ok {
 		c.String(http.StatusNotFound, fmt.Sprintf("api: %s not registered!", apiKey))
+		return
+	}
+
+	// 处理 CORS
+	if apiHandlerInfo.corsHandler != nil &&
+		apiHandlerInfo.corsHandler.CheckOriginByRequest(c.Request) {
+		apiHandlerInfo.corsHandler.WriteCORSHeader(c)
+	}
+
+	// 处理 OPTIONS 请求
+	if c.Request.Method == http.MethodOptions {
+		c.PureJSON(200, gin.H{})
 		return
 	}
 
@@ -83,14 +97,13 @@ func handlerApiRequest(c *gin.Context) {
 	apiContext := new(ApiContext)
 	apiContext.ClientIP = c.ClientIP()
 	apiContext.Request = c.Request
+	apiContext.respHeaders = make(map[string]string, 4)
 
 	// 请求追踪
 	apiContext.ReqId = reqId
 	apiContext.ReqLevel = level + 1
 
 	// 验证请求是否在有效时间内
-	apiHandlerInfo := apiHandlerFuncMap[apiKey]
-
 	// prehandler之前设置
 	apiContext.APIConfig.Expires = apiHandlerInfo.expire
 
@@ -115,14 +128,14 @@ func handlerApiRequest(c *gin.Context) {
 		for _, handler := range apiHandlerInfo.preHandlers {
 			resp := handler(c, apiContext)
 			if resp != nil && resp.Code != 0 {
-				failHanler(c, http.StatusOK, resp.Code, resp.Message)
+				failHandler(c, http.StatusOK, resp.Code, resp.Message)
 				return
 			}
 		}
 	}
 
 	if err != nil {
-		failHanler(c, http.StatusUnauthorized, ErrInvalidParam, err.Error())
+		failHandler(c, http.StatusUnauthorized, ErrInvalidParam, err.Error())
 		return
 	}
 
@@ -145,11 +158,17 @@ func handlerApiRequest(c *gin.Context) {
 
 		// access 日志处理
 		log.GetLogger("access").Info("api", zap.String("api", apiKey), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
+
+		// 写入 Header
+		for key, val := range apiContext.respHeaders {
+			c.Header(key, val)
+		}
+
 		c.PureJSON(200, response)
 	}
 }
 
-func failHanler(c *gin.Context, status int, code int, message string) {
+func failHandler(c *gin.Context, status int, code int, message string) {
 
 	ua := c.Request.UserAgent()
 

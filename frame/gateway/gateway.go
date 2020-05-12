@@ -62,6 +62,15 @@ type ApiContext struct {
 	APIConfig struct {
 		Expires time.Duration
 	} `json:"-"`
+
+	// response headers
+	respHeaders map[string]string `json:"-"`
+}
+
+func (c *ApiContext) WriteHeader(key, val string) {
+	if c.respHeaders != nil {
+		c.respHeaders[key] = val
+	}
 }
 
 type Handler interface {
@@ -89,10 +98,13 @@ type HandlerInfo struct {
 	// 接口签名验证时间的有效时间长度
 	expire time.Duration
 
+	pt paramType
+
 	// preHandlers 在业务Handler 处理前，定义的预处理
 	preHandlers []PreHandler
 
-	pt          paramType
+	// CORS 处理器
+	corsHandler *CORSHandler
 }
 
 type FieldInfo struct {
