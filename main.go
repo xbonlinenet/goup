@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/xbonlinenet/goup/demo"
 	"github.com/xbonlinenet/goup/frame"
+	"github.com/xbonlinenet/goup/frame/flags"
 	"github.com/xbonlinenet/goup/frame/gateway"
 	"github.com/xbonlinenet/goup/frame/log"
 )
@@ -24,7 +26,11 @@ func main() {
 }
 
 func version(c *gin.Context) {
-
+	c.JSON(http.StatusOK, gin.H{
+		"version":    flags.GitCommit,
+		"build_time": flags.BuildTime,
+		"build_env":  flags.BuildEnv,
+	})
 }
 
 func customRouter(r *gin.Engine) {
