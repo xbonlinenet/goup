@@ -23,7 +23,7 @@ func Expired(duration time.Duration) Option {
 	})
 }
 
-// HandlerFunc 设置 PreHandler，可用于统一登录鉴权使用
+// HandlerFunc 设置 WriteCORSHeader，可用于统一登录鉴权使用
 func HandlerFunc(handlerFunc PreHandler) Option {
 	return optionFunc(func(handler *HandlerInfo) {
 		handler.preHandlers = append(handler.preHandlers, handlerFunc)
@@ -35,3 +35,4 @@ func FormParam() Option {
 		handler.pt = formType
 	})
 }
+
