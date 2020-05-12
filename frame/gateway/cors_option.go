@@ -12,11 +12,22 @@ import (
 
 type CORSHandler struct {
 	AllowHosts []string
+	AllowAll   bool
 }
 
 func NewCORSHandler(allowHosts []string) *CORSHandler {
+	var allowAll bool
+
+	for _, host := range allowHosts {
+		if host == "*" {
+			allowAll = true
+			break
+		}
+	}
+
 	return &CORSHandler{
 		AllowHosts: allowHosts,
+		AllowAll:   allowAll,
 	}
 }
 
@@ -29,6 +40,10 @@ func (h *CORSHandler) CheckOrigin(origin string) bool {
 	if origin == "" {
 		// 非浏览器请求
 		return false
+	}
+
+	if h.AllowAll {
+		return true
 	}
 
 	originURL, err := url.Parse(origin)

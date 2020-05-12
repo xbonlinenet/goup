@@ -22,6 +22,8 @@ func (h EchoHandler) Mock() interface{} {
 	return EchoResponse{Code: 0, Message: "Mock Response"}
 
 }
+
 func (h EchoHandler) Handler(c *gateway.ApiContext) (interface{}, error) {
+	c.WriteHeader("X-Message", h.Request.Message)
 	return &EchoResponse{Code: 0, Message: h.Request.Message}, nil
 }
