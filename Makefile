@@ -10,7 +10,14 @@ export module=demo
 export httptest
 export GO111MODULE=on
 export CGO_ENABLED=0
+export GoVersion=$(shell go version)
 export group=group
+export ldflags="-X 'github.com/xbonlinenet/goup/frame/flags.GoVersion=${GoVersion}' \
+-X 'github.com/xbonlinenet/goup/frame/flags.GitBranch=`git rev-parse --abbrev-ref HEAD`' \
+-X 'github.com/xbonlinenet/goup/frame/flags.GitCommit=`git rev-parse HEAD`' \
+-X 'github.com/xbonlinenet/goup/frame/flags.BuildTime=`TZ=UTC-8 date '+%Y-%m-%d %H:%M:%S'`' \
+-X 'github.com/xbonlinenet/goup/frame/flags.BuildEnv=${env}' \
+"
 
 DATE=$(shell TZ=UTC-8 date '+%Y%m%d%H%M')
 
@@ -19,7 +26,7 @@ build: init
 	python built/go/env_check.py 1.12
 	$(call init_app,${module})
 	$(call generate_sbin,${module})
-	go build -i -o ${OUTPUT}/${module}/bin/${module}-$(DATE) ./pkg/cmd/${module}
+	go build -ldflags ${ldflags} -i -o ${OUTPUT}/${module}/bin/${module}-$(DATE) ./pkg/cmd/${module}
 ifeq ($(httptest),1)
 	go test -c -o ${OUTPUT}/${module}/bin/httptest ./pkg/cmd/${module}/httptest
 endif

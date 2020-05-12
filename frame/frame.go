@@ -9,10 +9,12 @@ import (
 	"path"
 	"time"
 
-	"github.com/xbonlinenet/goup/frame/cc"
-
 	"github.com/go-errors/errors"
 	"github.com/spf13/viper"
+
+	"github.com/xbonlinenet/goup/frame/cc"
+	"github.com/xbonlinenet/goup/frame/flags"
+
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/dyncfg"
@@ -36,7 +38,10 @@ func Bootstrap(run func()) {
 
 // InitFramework 初始化框架
 func InitFramework() {
+	flags.DisplayCompileTimeFlags()
+
 	start = time.Now().Unix()
+
 	flag.StringVar(&config, "config", "./conf/application.yml", "")
 	flag.Parse()
 
