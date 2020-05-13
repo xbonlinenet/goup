@@ -2,21 +2,42 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
-	"github.com/xbonlinenet/goup/frame/util"
 	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
+
+	"github.com/xbonlinenet/goup/frame/util"
 )
 
 var redisMgr *RedisMgr
 
-// ErrRedisConfig 配置错误
-var ErrRedisConfig = errors.New("redis config error")
+var (
+	// ErrRedisConfig 配置错误
+	ErrRedisConfig = errors.New("redis config error")
+	// ErrRedisMgrNotInited Redis Manager 还未初始化
+	ErrRedisMgrNotInited = errors.New("redis manager not inited")
+)
 
-// ErrReidsNotInited Redis 还未初始化
-var ErrReidsNotInited = errors.New("redis not inited")
+// ErrRedisConfigNotFound 配置未找到错误
+type ErrRedisConfigNotFound struct {
+	ConfigName string
+}
+
+func (e ErrRedisConfigNotFound) Error() string {
+	return fmt.Sprintf("redis config (%s) not found", e.ConfigName)
+}
+
+// ErrRedisInitError 初始化 Redis 错误
+type ErrRedisInitError struct {
+	Err error
+}
+
+func (e ErrRedisInitError) Error() string {
+	return fmt.Sprintf("init redis error %s", e.Err.Error())
+}
 
 // InitRedisMgr 初始化 Redis
 func InitRedisMgr() {
@@ -34,7 +55,7 @@ func UninitRedisMgr() {
 // GetRedis 获取 redis
 func GetRedis(name string) (redis.Cmdable, error) {
 	if redisMgr == nil {
-		panic(ErrReidsNotInited)
+		panic(ErrRedisMgrNotInited)
 	}
 
 	return redisMgr.getRedis(name)
@@ -43,7 +64,7 @@ func GetRedis(name string) (redis.Cmdable, error) {
 // MustGetRedis 获取 redis，如果获取失败，直接报错
 func MustGetRedis(name string) redis.Cmdable {
 	if redisMgr == nil {
-		panic(ErrReidsNotInited)
+		panic(ErrRedisMgrNotInited)
 	}
 
 	return redisMgr.mustGetRedis(name)
@@ -72,7 +93,7 @@ type RedisMgr struct {
 func (mgr *RedisMgr) getRedis(name string) (redis.Cmdable, error) {
 	config := mgr.redisConfig.Sub(name)
 	if config == nil {
-		return nil, ErrRedisConfig
+		return nil, ErrRedisConfigNotFound{name}
 	}
 
 	isCluster := config.GetBool("cluster")
@@ -110,7 +131,7 @@ func (mgr *RedisMgr) getRedis(name string) (redis.Cmdable, error) {
 func (mgr *RedisMgr) mustGetRedis(name string) redis.Cmdable {
 	config := mgr.redisConfig.Sub(name)
 	if config == nil {
-		panic(ErrRedisConfig)
+		panic(ErrRedisConfigNotFound{name})
 	}
 
 	isCluster := config.GetBool("cluster")
@@ -124,7 +145,7 @@ func (mgr *RedisMgr) mustGetRedis(name string) redis.Cmdable {
 		}
 
 		cluster, err := initRedisClusterClient(config)
-		util.CheckError(err)
+		util.CheckError(ErrRedisInitError{err})
 
 		mgr.clusterMap[name] = cluster
 		return cluster
@@ -136,8 +157,9 @@ func (mgr *RedisMgr) mustGetRedis(name string) redis.Cmdable {
 
 	client, err := initRedisClient(config)
 	if err != nil {
-		panic(ErrRedisConfig)
+		panic(ErrRedisInitError{err})
 	}
+
 	mgr.redisMap[name] = client
 	return client
 
