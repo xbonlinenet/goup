@@ -36,7 +36,7 @@ release: build
 	$(call release_app,${module})
 
 run: build
-	cd ${OUTPUT}/${module} && ./bin/${module} --config conf/application.yml
+	cd ${OUTPUT}/${module}/bin && ./${module} --config ../conf/application.yml
 
 
 clean:
