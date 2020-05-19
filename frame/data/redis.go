@@ -145,7 +145,7 @@ func (mgr *RedisMgr) mustGetRedis(name string) redis.Cmdable {
 		}
 
 		cluster, err := initRedisClusterClient(config)
-		util.CheckError(ErrRedisInitError{err})
+		util.CheckError(err)
 
 		mgr.clusterMap[name] = cluster
 		return cluster
@@ -193,7 +193,7 @@ func initRedisClient(config *viper.Viper) (*redis.Client, error) {
 func initRedisClusterClient(config *viper.Viper) (*redis.ClusterClient, error) {
 	addrs := config.GetStringSlice("addrs")
 	if len(addrs) <= 0 {
-		return nil, errors.New("cluster hasn't any addr")
+		return nil, ErrRedisInitError{errors.New("cluster hasn't any addr")}
 	}
 	password := config.GetString("password")
 	poolSize := config.GetInt("pool-size")
@@ -209,7 +209,7 @@ func initRedisClusterClient(config *viper.Viper) (*redis.ClusterClient, error) {
 
 	_, err := cluster.Ping().Result()
 	if err != nil {
-		return nil, err
+		return nil, ErrRedisInitError{err}
 	}
 
 	return cluster, nil
