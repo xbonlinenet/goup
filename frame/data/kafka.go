@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
 	cluster "github.com/bsm/sarama-cluster"
@@ -47,6 +48,7 @@ func NewConsumerWithNewestOffset(topics []string, groupID string) (*cluster.Cons
 	config.Group.Return.Notifications = true
 	config.ChannelBufferSize = 1024
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
+	config.Consumer.Offsets.CommitInterval = time.Second
 
 	brokers := viper.GetStringSlice("data.kafka.brokers")
 	if len(brokers) == 0 {
