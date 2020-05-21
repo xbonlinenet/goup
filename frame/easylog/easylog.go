@@ -85,11 +85,11 @@ func (r *Reporter) ReporterItems(logs *[]LogItem) error {
 		Logs:    logs,
 	}
 	if !r.async {
-		return reportToEasyLogServerImpl(r.reportURL, easyLog)
+		return reportToEasyLogServerSync(r.reportURL, easyLog)
 	}
 
 	if r.maxReporterCount == 0 {
-		go reportToEasyLogServer(r.reportURL, easyLog)
+		reportToEasyLogServerAsync(r.reportURL, easyLog)
 		return nil
 	}
 
@@ -100,7 +100,7 @@ func (r *Reporter) ReporterItems(logs *[]LogItem) error {
 		return ErrReporterExhaust
 	}
 
-	go reportToEasyLogServer(r.reportURL, easyLog)
+	reportToEasyLogServerAsync(r.reportURL, easyLog)
 	return nil
 }
 
@@ -112,7 +112,7 @@ var httpClientContent = &http.Client{
 	Timeout: time.Millisecond * 3000,
 }
 
-func reportToEasyLogServerImpl(reportURL string, easylog *EasyLog) error {
+func reportToEasyLogServerSync(reportURL string, easylog *EasyLog) error {
 
 	payload, err := json.Marshal(easylog)
 	if err != nil {
@@ -153,8 +153,10 @@ func reportToEasyLogServerImpl(reportURL string, easylog *EasyLog) error {
 	return nil
 }
 
-func reportToEasyLogServer(reportURL string, easylog *EasyLog) {
-	if err := reportToEasyLogServerImpl(reportURL, easylog); err != nil {
-		log.Default().Error("easylogErr", zap.Error(err))
-	}
+func reportToEasyLogServerAsync(reportURL string, easylog *EasyLog) {
+	go func() {
+		if err := reportToEasyLogServerSync(reportURL, easylog); err != nil {
+			log.Default().Error("easylogErr", zap.Error(err))
+		}
+	}()
 }
