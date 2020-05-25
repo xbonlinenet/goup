@@ -23,16 +23,11 @@ var (
 	ErrEasyLogServerInternalError       = errors.New("easy log server internal error")
 )
 
-type LogItem struct {
-	Uid  string `json:"uid"`
-	Data string `json:"data"`
-}
-
 type EasyLog struct {
-	Product string     `json:"product"`
-	Module  string     `json:"module"`
-	Event   string     `json:"event"`
-	Logs    *[]LogItem `json:"logs"`
+	Product string        `json:"product"`
+	Module  string        `json:"module"`
+	Event   string        `json:"event"`
+	Logs    []interface{} `json:"logs"`
 }
 
 type Reporter struct {
@@ -67,16 +62,7 @@ func NewAsyncEventReporter(reportURL string, product string, module string, even
 	}
 }
 
-func (r *Reporter) ReportItem(userId string, data string) error {
-	item := LogItem{
-		Uid:  userId,
-		Data: data,
-	}
-	logs := &[]LogItem{item}
-	return r.ReporterItems(logs)
-}
-
-func (r *Reporter) ReporterItems(logs *[]LogItem) error {
+func (r *Reporter) ReporterItems(logs []interface{}) error {
 
 	easyLog := &EasyLog{
 		Product: r.product,
