@@ -101,50 +101,45 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 			fields = append(fields, info.fields...)
 			types = append(types, info.types...)
 			continue
-		}
 
-		// 处理 Foo
-		if field.Type.Kind() == reflect.Struct {
+		} else if field.Type.Kind() == reflect.Struct {
+			// 处理 Foo
 			info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
 			types = append(types, info.types...)
-			continue
-		}
 
-		// 处理 *Foo
-		if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+		} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+			// 处理 *Foo
 			fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
 			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 			types = append(types, info.types...)
-		}
 
-		// 处理 []Foo
-		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+		} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+			// 处理 []Foo
 			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 			types = append(types, info.types...)
-		}
 
-		// 处理 []*Foo
-		if field.Type.Kind() == reflect.Slice &&
+		} else if field.Type.Kind() == reflect.Slice &&
 			field.Type.Elem().Kind() == reflect.Ptr &&
 			field.Type.Elem().Elem().Kind() == reflect.Struct {
+			// 处理 []*Foo
 
 			info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
 			types = append(types, info.types...)
-		}
 
-		// 处理 map[string]Foo
-		if field.Type.Kind() == reflect.Map &&
+		} else if field.Type.Kind() == reflect.Map &&
 			field.Type.Elem().Kind() == reflect.Struct {
+			// 处理 map[string]Foo
+
 			fmt.Printf("map type: %s\n", field.Type.Elem().String())
 
 			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 			types = append(types, info.types...)
-		}
 
-		// 处理 map[string]*Foo
-		if field.Type.Kind() == reflect.Map &&
+		} else if field.Type.Kind() == reflect.Map &&
 			field.Type.Elem().Kind() == reflect.Ptr &&
 			field.Type.Elem().Elem().Kind() == reflect.Struct {
+			// 处理 map[string]*Foo
+
 			info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
 			types = append(types, info.types...)
 		}
