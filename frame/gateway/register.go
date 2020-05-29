@@ -60,9 +60,24 @@ func getHandlerInOutParamInfo(handler Handler) (in, out *DTOInfo, reqType reflec
 }
 
 func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
+	foundTypes := map[string]struct{}{}
+	return getDTOFieldInfoImpl(dto, sub, foundTypes)
+}
+
+func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struct{}) *DTOInfo {
 	fields := make([]*FieldInfo, 0, 10)
 	types := make([]*TypeInfo, 0)
 	name := dto.String()
+
+	if _, found := foundTypes[name]; sub && found {
+		return &DTOInfo{
+			fields: fields,
+			types:  types,
+		}
+	} else {
+		foundTypes[name] = struct{}{}
+	}
+
 	if sub && name == "time.Time" {
 		return &DTOInfo{
 			fields: fields,
@@ -82,7 +97,7 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 		tag := field.Tag
 
 		if field.Anonymous {
-			info := getDTOFieldInfo(field.Type, true)
+			info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
 			fields = append(fields, info.fields...)
 			types = append(types, info.types...)
 			continue
@@ -90,7 +105,7 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 
 		// 处理 Foo
 		if field.Type.Kind() == reflect.Struct {
-			info := getDTOFieldInfo(field.Type, true)
+			info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
 			types = append(types, info.types...)
 			continue
 		}
@@ -98,13 +113,13 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 		// 处理 *Foo
 		if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
 			fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
-			info := getDTOFieldInfo(field.Type.Elem(), true)
+			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 			types = append(types, info.types...)
 		}
 
 		// 处理 []Foo
 		if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
-			info := getDTOFieldInfo(field.Type.Elem(), true)
+			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 			types = append(types, info.types...)
 		}
 
@@ -113,7 +128,7 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 			field.Type.Elem().Kind() == reflect.Ptr &&
 			field.Type.Elem().Elem().Kind() == reflect.Struct {
 
-			info := getDTOFieldInfo(field.Type.Elem().Elem(), true)
+			info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
 			types = append(types, info.types...)
 		}
 
@@ -122,7 +137,7 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 			field.Type.Elem().Kind() == reflect.Struct {
 			fmt.Printf("map type: %s\n", field.Type.Elem().String())
 
-			info := getDTOFieldInfo(field.Type.Elem(), true)
+			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 			types = append(types, info.types...)
 		}
 
@@ -130,7 +145,7 @@ func getDTOFieldInfo(dto reflect.Type, sub bool) *DTOInfo {
 		if field.Type.Kind() == reflect.Map &&
 			field.Type.Elem().Kind() == reflect.Ptr &&
 			field.Type.Elem().Elem().Kind() == reflect.Struct {
-			info := getDTOFieldInfo(field.Type.Elem().Elem(), true)
+			info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
 			types = append(types, info.types...)
 		}
 
