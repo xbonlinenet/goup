@@ -144,11 +144,12 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 			types = append(types, info.types...)
 		}
 
+		required := tag.Get("binding") == "required"
 		filedInfo := FieldInfo{
 			name:     tag.Get("json"),
 			desc:     tag.Get("desc"),
 			typ:      field.Type.String(),
-			required: true,
+			required: required,
 			note:     "todo for binding",
 		}
 
