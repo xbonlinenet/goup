@@ -122,6 +122,11 @@ func handlerApiRequest(c *gin.Context) {
 		}
 	}
 
+	if err != nil {
+		failHandler(c, http.StatusBadRequest, ErrInvalidParam, err.Error())
+		return
+	}
+
 	if len(apiHandlerInfo.preHandlers) != 0 {
 		apiContext.Keys = make(map[string]interface{}, 4)
 
@@ -132,11 +137,6 @@ func handlerApiRequest(c *gin.Context) {
 				return
 			}
 		}
-	}
-
-	if err != nil {
-		failHandler(c, http.StatusUnauthorized, ErrInvalidParam, err.Error())
-		return
 	}
 
 	handler := reflect.New(apiHandlerInfo.handler).Interface()
