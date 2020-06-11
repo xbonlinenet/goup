@@ -3,6 +3,7 @@ package gateway
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -146,7 +147,7 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 
 		required := tag.Get("binding") == "required"
 		filedInfo := FieldInfo{
-			name:     tag.Get("json"),
+			name:     strings.Split(tag.Get("json"), ",")[0],
 			desc:     tag.Get("desc"),
 			typ:      field.Type.String(),
 			required: required,
