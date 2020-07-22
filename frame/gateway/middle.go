@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 
 	"github.com/xbonlinenet/goup/frame/alter"
@@ -115,11 +116,7 @@ func handlerApiRequest(c *gin.Context) {
 	if apiHandlerInfo.pt == formType {
 		err = c.ShouldBindQuery(request)
 	} else {
-		if len(apiHandlerInfo.preHandlers) != 0 {
-			err = c.ShouldBindBodyWith(request, binding.JSON)
-		} else {
-			err = c.BindJSON(request)
-		}
+		err = c.ShouldBindBodyWith(request, binding.JSON)
 	}
 
 	if err != nil {
@@ -188,7 +185,15 @@ func failHandler(c *gin.Context, status int, code int, message string) {
 
 	}
 	invalidRequestCounter.WithLabelValues(c.Request.URL.Path, strconv.Itoa(code)).Inc()
-	log.GetLogger("access_error").Info(c.Request.URL.Path, zap.Int("code", code), zap.String("message", message), zap.String("url", c.Request.URL.String()))
+
+	body, _ := c.Get(gin.BodyBytesKey)
+	log.GetLogger("access_error").Info(c.Request.URL.Path,
+		zap.Int("code", code),
+		zap.String("message", message),
+		zap.String("url", c.Request.URL.String()),
+		zap.String("body", cast.ToString(body)),
+		zap.String("referer", c.Request.Referer()),
+	)
 }
 
 func getAPIKey(path string) string {
