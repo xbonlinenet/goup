@@ -161,7 +161,11 @@ func handlerApiRequest(c *gin.Context) {
 			c.Header(key, val)
 		}
 
-		c.PureJSON(200, response)
+		if apiHandlerInfo.respType == XmlType {
+			c.XML(200, response)
+		} else {
+			c.PureJSON(200, response)
+		}
 	}
 }
 

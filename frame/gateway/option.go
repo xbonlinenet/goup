@@ -36,3 +36,9 @@ func FormParam() Option {
 	})
 }
 
+// ResponseXML 返回 xml 类型内容
+func ResponseXML() Option {
+	return optionFunc(func(handler *HandlerInfo) {
+		handler.respType = XmlType
+	})
+}

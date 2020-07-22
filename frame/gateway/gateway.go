@@ -91,6 +91,13 @@ const (
 	formType paramType = 1
 )
 
+type respType int
+
+const (
+	JsonType respType = 0
+	XmlType  respType = 1
+)
+
 type HandlerInfo struct {
 	reqType reflect.Type
 	// reqParaMap map[string]Pair
@@ -98,7 +105,8 @@ type HandlerInfo struct {
 	// 接口签名验证时间的有效时间长度
 	expire time.Duration
 
-	pt paramType
+	pt       paramType
+	respType respType
 
 	// preHandlers 在业务Handler 处理前，定义的预处理
 	preHandlers []PreHandler
