@@ -221,10 +221,16 @@ func ApiDetail(c *gin.Context) {
 	}
 	util.CheckError(err)
 
-	mock := fmt.Sprintf(`<pre class="code">curl -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
+	var mock string
+	x := apiHandlerFuncMap[name]
+	if x.pt == formType {
+		mock = ""
+	} else {
+		mock = fmt.Sprintf(`<pre class="code">curl -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
 	'%s' \
 	-d'%s' \
 	-H "Mock: true"</pre>`, path, string(body))
+	}
 
 	data := fmt.Sprintf(html, head, name, api.Name, mock, api.Summary, request.String(), response.String())
 
