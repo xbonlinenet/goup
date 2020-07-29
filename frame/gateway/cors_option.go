@@ -73,6 +73,7 @@ func (h *CORSHandler) BuildCORSHeaders(r *http.Request) map[string]string {
 		"Access-Control-Allow-Credentials": "true",
 		"Access-Control-Allow-Methods":     "GET,HEAD,POST,PUT,DELETE",
 		"Access-Control-Allow-Origin":      origin,
+		"Access-Control-Allow-Headers":     "Origin, X-Requested-With, Content-Type, Accept",
 	}
 	return headers
 }
