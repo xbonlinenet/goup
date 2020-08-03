@@ -67,7 +67,8 @@ func handlerApiRequest(c *gin.Context) {
 		if err := recover(); err != nil {
 			stack := recovery.Stack(3)
 			log.GetLogger("error").Sugar().Errorf("[Recovery] %s, %v\n %s", err, c.Request.URL.Path, stack)
-			alter.Notify(fmt.Sprintf("Error: %s", c.Request.URL.Path), string(stack), c.Request.URL.Path)
+			notifyMsg, notifyDetail, notifyErrorID := fmt.Sprintf("Error: %s", err), string(stack), c.Request.URL.Path
+			alter.Notify(notifyMsg, notifyDetail, notifyErrorID)
 			failHandler(c, http.StatusInternalServerError, ErrUnknowError, string(stack))
 		}
 	}()
