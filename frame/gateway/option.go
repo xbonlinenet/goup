@@ -42,3 +42,10 @@ func ResponseXML() Option {
 		handler.respType = XmlType
 	})
 }
+
+// ExtInfo 设置额外的说明信息
+func ExtInfo(info map[string]string) Option {
+	return optionFunc(func(handler *HandlerInfo) {
+		handler.extInfo = info
+	})
+}

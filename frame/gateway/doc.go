@@ -128,6 +128,11 @@ func ApiDetail(c *gin.Context) {
 		<h1>%s</h1>
 		<i>%s</i>
 		<hr/>
+
+		<div>
+		%s
+		</div>
+
 		<h3>Mock:</h3>
 		<code class="pre">%s</code>
 		<div><span> %s </span>
@@ -232,7 +237,16 @@ func ApiDetail(c *gin.Context) {
 	-H "Mock: true"</pre>`, path, string(body))
 	}
 
-	data := fmt.Sprintf(html, head, name, api.Name, mock, api.Summary, request.String(), response.String())
+	extInfo := ""
+	for k, v := range x.extInfo {
+		extInfo += "<p>"
+		extInfo += fmt.Sprintf("<b> %s: </b>", k)
+		extInfo += fmt.Sprintf("<span> %s </span>", v)
+
+		extInfo += "</p>"
+	}
+
+	data := fmt.Sprintf(html, head, name, api.Name, extInfo, mock, api.Summary, request.String(), response.String())
 
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(data))
 

@@ -15,6 +15,8 @@ replace (
 	google.golang.org/appengine => github.com/golang/appengine v1.6.1
 	gopkg.in/fsnotify.v1 => github.com/fsnotify/fsnotify v1.4.2
 	gopkg.in/jcmturner/gokrb5.v6 => github.com/jcmturner/gokrb5 v6.0.5+incompatible
+	gopkg.in/russross/blackfriday.v2 => github.com/russross/blackfriday/v2 v2.0.1
+
 )
 
 go 1.12
@@ -51,6 +53,7 @@ require (
 	github.com/prometheus/client_golang v0.9.3
 	github.com/satori/go.uuid v1.2.0
 	github.com/sergi/go-diff v1.0.0 // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cast v1.3.0
 	github.com/spf13/viper v1.4.0
@@ -69,4 +72,5 @@ require (
 	golang.org/x/text v0.3.2
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	gopkg.in/russross/blackfriday.v2 v2.0.0-00010101000000-000000000000
 )

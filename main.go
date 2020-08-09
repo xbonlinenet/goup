@@ -47,7 +47,7 @@ func registerRouter() {
 		demo.EchoHandler{},
 		gateway.WithCORSHandler(ilikeCORSHandler),
 	)
-	gateway.RegisterAPI("demo", "redis", "Demo for reids incr", demo.RedisHandler{})
+	gateway.RegisterAPI("demo", "redis", "Demo for reids incr", demo.RedisHandler{}, gateway.ExtInfo(map[string]string{"test": "<a href='https://www.null.com'>test</a>"}))
 	gateway.RegisterAPI("demo", "mysql", "Demo for mysql ", demo.MysqlHandler{})
 	gateway.RegisterAPI("demo", "config", "Demo for config center ", demo.ConfigHandler{})
 	gateway.RegisterAPI("demo", "pre", "Demo for pre handler, normally used in login filter",

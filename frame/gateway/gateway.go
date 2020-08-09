@@ -113,6 +113,9 @@ type HandlerInfo struct {
 
 	// CORS 处理器
 	corsHandler *CORSHandler
+
+	// extInfo 扩展属性
+	extInfo map[string]string
 }
 
 type FieldInfo struct {
