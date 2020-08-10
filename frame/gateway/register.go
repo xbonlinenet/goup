@@ -145,9 +145,16 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 			types = append(types, info.types...)
 		}
 
+		fieldName := ""
+		if tag.Get("json") == "" {
+			fieldName = strings.Split(tag.Get("form"), ",")[0]
+		} else {
+			fieldName = strings.Split(tag.Get("json"), ",")[0]
+		}
+
 		required := tag.Get("binding") == "required"
 		filedInfo := FieldInfo{
-			name:     strings.Split(tag.Get("json"), ",")[0],
+			name:     fieldName,
 			desc:     tag.Get("desc"),
 			typ:      field.Type.String(),
 			required: required,
