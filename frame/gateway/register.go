@@ -152,7 +152,16 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 			fieldName = strings.Split(tag.Get("json"), ",")[0]
 		}
 
-		required := tag.Get("binding") == "required"
+
+		// 检查字段是否是必须的
+		var required bool
+		for _, i := range strings.Split(tag.Get("binding"), ",") {
+			if i == "required" {
+				required = true
+				break
+			}
+		}
+
 		filedInfo := FieldInfo{
 			name:     fieldName,
 			desc:     tag.Get("desc"),
