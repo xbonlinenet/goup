@@ -93,6 +93,7 @@ wget -O "pkg/cmd/$module/api/demo/config.go" https://github.com/xbonlinenet/goup
 wget -O "pkg/cmd/$module/api/demo/pre.go" https://github.com/xbonlinenet/goup/raw/master/demo/pre.go
 wget -O "pkg/cmd/$module/api/demo/sleep.go" https://github.com/xbonlinenet/goup/raw/master/demo/sleep.go
 wget -O "pkg/cmd/$module/api/demo/doc.go" https://github.com/xbonlinenet/goup/raw/master/demo/doc.go
+wget -O "pkg/cmd/$module/api/demo/struct.go" https://github.com/xbonlinenet/goup/raw/master/demo/struct.go
 
 
 wget -O "pkg/cmd/$module/httptest/echo_test.go" https://github.com/xbonlinenet/goup/raw/master/httptest/echo_test.go
