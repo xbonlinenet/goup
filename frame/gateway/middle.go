@@ -77,7 +77,8 @@ func handlerApiRequest(c *gin.Context) {
 	apiKey := getAPIKey(c.Request.URL.Path)
 	apiHandlerInfo, ok := apiHandlerFuncMap[apiKey]
 	if !ok {
-		c.String(http.StatusNotFound, fmt.Sprintf("api: %s not registered!", apiKey))
+		c.Next()
+		// c.String(http.StatusNotFound, fmt.Sprintf("api: %s not registered!", apiKey))
 		return
 	}
 
