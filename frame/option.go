@@ -48,3 +48,10 @@ func ReportApi(addr string) Option {
 		cfg.reportApiDocAddr = addr
 	})
 }
+
+// Middlewares 添加自定义的 middleware
+func Middlewares(list []gin.HandlerFunc) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.middlewareList = list
+	})
+}

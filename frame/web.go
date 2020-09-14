@@ -42,6 +42,11 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 
 	p.Use(r)
 
+	// Option: middleware
+	for _, middle := range config.middlewareList {
+		r.Use(middle)
+	}
+
 	r.Use(recovery.Recovery())
 	r.Use(gateway.APIMiddleware())
 
@@ -88,6 +93,7 @@ type bootstarpServerConfig struct {
 	customRouter     func(r *gin.Engine)
 	versionHandler   func(c *gin.Context)
 	reportApiDocAddr string
+	middlewareList   []gin.HandlerFunc
 }
 
 var httpClient = &http.Client{
