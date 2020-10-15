@@ -40,6 +40,8 @@ type RequestOptions struct {
 
 	// Headers
 	Headers map[string]string
+
+	Verbose bool
 }
 
 // options abs
@@ -64,6 +66,12 @@ func WithHeaders(headers map[string]string) RequestOption {
 func WithTimeout(timeout time.Duration) RequestOption {
 	return ApplyOption(func(options *RequestOptions) {
 		options.Timeout = timeout
+	})
+}
+
+func WithVerbose(verbose bool) RequestOption {
+	return ApplyOption(func(options *RequestOptions) {
+		options.Verbose = verbose
 	})
 }
 
@@ -150,7 +158,9 @@ func HttpPostWithOptions(
 	}
 	defer resp.Body.Close()
 
-	log.Default().Sugar().Infof("Request %s, Status Code: %d", url, resp.StatusCode)
+	if reqOpts.Verbose {
+		log.Default().Sugar().Infof("Request %s, Status Code: %d", url, resp.StatusCode)
+	}
 
 	return ioutil.ReadAll(resp.Body)
 }
