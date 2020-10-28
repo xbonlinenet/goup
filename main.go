@@ -22,6 +22,7 @@ func main() {
 		frame.Version(version),
 		frame.CustomRouter(customRouter),
 		frame.ReportApi("http://192.168.0.22:14000/api/doc/report"),
+		frame.EnableconfigCenterDefalutLocalCacheDir(true),
 	)
 }
 

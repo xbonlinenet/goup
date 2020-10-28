@@ -29,7 +29,11 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		config.beforeInit()
 	}
 
+	if config.defaultLocalCachePathEnable {
+		defaultConfigCenterLocalCacheDir = "/usr/local/vntop/config_center/local_cache/"
+	}
 	InitFramework()
+
 	defer UnInitFramework()
 
 	r := gin.New()
@@ -88,12 +92,13 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 }
 
 type bootstarpServerConfig struct {
-	beforeInit       func()
-	beforeServerRun  func()
-	customRouter     func(r *gin.Engine)
-	versionHandler   func(c *gin.Context)
-	reportApiDocAddr string
-	middlewareList   []gin.HandlerFunc
+	beforeInit                  func()
+	beforeServerRun             func()
+	customRouter                func(r *gin.Engine)
+	versionHandler              func(c *gin.Context)
+	reportApiDocAddr            string
+	middlewareList              []gin.HandlerFunc
+	defaultLocalCachePathEnable bool
 }
 
 var httpClient = &http.Client{

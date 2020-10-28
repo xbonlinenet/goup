@@ -26,8 +26,9 @@ var (
 	config string
 	start  int64
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx                              context.Context
+	cancel                           context.CancelFunc
+	defaultConfigCenterLocalCacheDir string
 )
 
 func Bootstrap(run func()) {
@@ -96,7 +97,13 @@ func InitFramework() {
 	if len(zkServers) == 0 {
 		panic("zkServers is empty")
 	}
-	cc.InitConfigCenter(zkServers)
+
+	if len(defaultConfigCenterLocalCacheDir) > 0 {
+		cc.InitConfigCenterV2(zkServers, defaultConfigCenterLocalCacheDir)
+	} else {
+		cc.InitConfigCenter(zkServers)
+	}
+
 }
 
 func loadIncludeConfigFiles(items map[string]string, basePath string) {

@@ -1,14 +1,15 @@
 package cc
 
 import (
-	"github.com/xbonlinenet/goup/frame/log"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/spf13/cast"
-	"github.com/xbonlinenet/go_config_center"
-	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/spf13/cast"
+	"github.com/xbonlinenet/go_config_center"
+	"github.com/xbonlinenet/goup/frame/log"
+	"go.uber.org/zap"
 )
 
 var (
@@ -37,6 +38,10 @@ func InitConfigCenter(servers []string) {
 	}
 
 	center = go_config_center.NewConfigCenter("", servers, path, "json")
+}
+
+func InitConfigCenterV2(servers []string, localCacheDir string) {
+	center = go_config_center.NewConfigCenter("", servers, localCacheDir, "") // configType 无需指定, 直接使用配置文件后缀
 }
 
 func UnInitConfigCenter() {

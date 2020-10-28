@@ -55,3 +55,10 @@ func Middlewares(list []gin.HandlerFunc) Option {
 		cfg.middlewareList = list
 	})
 }
+
+// 配置中心本地缓存默认父目录使能
+func EnableconfigCenterDefalutLocalCacheDir(enable bool) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.defaultLocalCachePathEnable = enable
+	})
+}
