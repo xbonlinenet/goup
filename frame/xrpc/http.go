@@ -136,6 +136,7 @@ func HttpPostWithOptions(
 		return []byte{}, err
 	}
 
+	req.Header.Add("Content-type", "application/json")
 	if c != nil {
 		req.Header.Add(perf.ReqIdKey, c.ReqId)
 		req.Header.Add(perf.ReqLevel, strconv.Itoa(c.ReqLevel+1))
