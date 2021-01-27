@@ -103,9 +103,9 @@ var Json = jsoniter.ConfigCompatibleWithStandardLibrary
 // HttpPostWithOptions
 //     headers := map[string]string{"X-Key": "val"}
 //     respBytes, err := HttpPostWithOptions(ctx, url, data, WithTimeout(10*time.Second), WithHeaders(headers))
-func HttpPostWithOptions(
-	c *gateway.ApiContext, url string, data interface{}, options ...RequestOption) ([]byte, error) {
 
+func HttpPostRawWithOptions(
+	c *gateway.ApiContext, url string, reqBytes []byte, options ...RequestOption) ([]byte, error) {
 	initHttpClient()
 
 	start := time.Now()
@@ -118,12 +118,6 @@ func HttpPostWithOptions(
 	// apply options
 	for _, option := range options {
 		option.apply(&reqOpts)
-	}
-
-	reqBytes, err := Json.Marshal(&data)
-	if err != nil {
-		log.Default().Sugar().Errorf("Request Data Marshal json error: %s", err.Error())
-		return []byte{}, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), reqOpts.Timeout)
@@ -164,6 +158,17 @@ func HttpPostWithOptions(
 	}
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func HttpPostWithOptions(
+	c *gateway.ApiContext, url string, data interface{}, options ...RequestOption) ([]byte, error) {
+	reqBytes, err := Json.Marshal(&data)
+	if err != nil {
+		log.Default().Sugar().Errorf("Request Data Marshal json error: %s", err.Error())
+		return []byte{}, err
+	}
+
+	return HttpPostRawWithOptions(c, url, reqBytes, options...)
 }
 
 func HttpPostWithJson(
