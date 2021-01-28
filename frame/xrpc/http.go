@@ -176,3 +176,58 @@ func HttpPostWithJson(
 
 	return HttpPostWithOptions(c, url, data, WithTimeout(timeout))
 }
+
+func HttpGetWithOptions(c *gateway.ApiContext, url string,
+	options ...RequestOption) ([]byte, error) {
+	initHttpClient()
+
+	start := time.Now()
+
+	reqOpts := RequestOptions{
+		Timeout: DefaultTimeout,
+		Headers: make(map[string]string, 4),
+	}
+
+	// apply options
+	for _, option := range options {
+		option.apply(&reqOpts)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), reqOpts.Timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		log.Default().Sugar().Errorf("New Request Error: %s", err.Error())
+
+		return []byte{}, err
+	}
+
+	if c != nil {
+		req.Header.Add(perf.ReqIdKey, c.ReqId)
+		req.Header.Add(perf.ReqLevel, strconv.Itoa(c.ReqLevel+1))
+	}
+
+	// attach option headers
+	for k, v := range reqOpts.Headers {
+		req.Header.Add(k, v)
+	}
+
+	host := req.URL.Hostname()
+	path := req.URL.Path
+
+	defer requestLatency.WithLabelValues(host, path).Observe(time.Since(start).Seconds())
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Default().Sugar().Warnf("Do Request %s, Error: %s", url, err.Error())
+		return []byte{}, err
+	}
+	defer resp.Body.Close()
+
+	if reqOpts.Verbose {
+		log.Default().Sugar().Infof("Request %s, Status Code: %d", url, resp.StatusCode)
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
