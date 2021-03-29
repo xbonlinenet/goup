@@ -32,8 +32,9 @@ func init() {
 
 // requestLatency 接口延迟
 var requestLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "request_latency",
-	Help: "stat request latency by seconds",
+	Name:    "request_latency",
+	Help:    "stat request latency by seconds",
+	Buckets: []float64{.005, .01, .025, .05, .1, .15, .2, .25, .5, 1, 2.5, 5, 10},
 }, []string{"api"})
 
 // invalidRequestCounter 统计错误请求数量情况
@@ -112,7 +113,10 @@ func handlerApiRequest(c *gin.Context) {
 	// prehandler之前设置
 	apiContext.APIConfig.Expires = apiHandlerInfo.expire
 
-	defer requestLatency.WithLabelValues(apiKey).Observe(time.Since(start).Seconds())
+	defer func() {
+		s := time.Since(start).Seconds()
+		requestLatency.WithLabelValues(apiKey).Observe(s)
+	}()
 	// 处理请求
 	request := reflect.New(apiHandlerInfo.reqType).Interface()
 
