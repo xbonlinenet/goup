@@ -78,7 +78,8 @@ func InitFramework() {
 	data.InitKafka(ctx)
 
 	users := viper.GetStringSlice("alter.users")
-	if len(users) > 0 {
+	robotUrls := viper.GetStringSlice("alter.robot-urls")
+	if len(users) > 0 || len(robotUrls) > 0 {
 		alter.InitAlter()
 	}
 

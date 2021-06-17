@@ -20,6 +20,11 @@ func TestGinkgo(t *testing.T) {
 	RunSpecs(t, "cache")
 }
 
+type Object struct {
+	Str string
+	Num int
+}
+
 func perform(n int, cbs ...func(int)) {
 	var wg sync.WaitGroup
 	for _, cb := range cbs {

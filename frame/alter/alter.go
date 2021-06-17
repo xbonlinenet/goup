@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/go-errors/errors"
+	"github.com/xbonlinenet/alter/lib"
 	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/util"
-	"github.com/xbonlinenet/alter/lib"
-	"github.com/go-errors/errors"
 )
 
 var (
@@ -22,14 +22,15 @@ var (
 func InitAlter() {
 	gateway := data.MustGetRedis("gateway")
 	users := viper.GetStringSlice("alter.users")
-	if len(users) == 0 {
-		panic(errors.New("Havn't config alter users"))
+	robotUrls := viper.GetStringSlice("alter.robot-urls")
+	if len(users) == 0 && len(robotUrls) == 0 {
+		panic(errors.New("Havn't config alter users or robots"))
 	}
 
 	log.Default().Info(fmt.Sprintf("Alter users: %s", users))
 
 	var err error
-	client, err = lib.NewClient(gateway, users, os.Args[0])
+	client, err = lib.NewClientV2(gateway, users, robotUrls, os.Args[0])
 	util.CheckError(err)
 }
 
