@@ -173,13 +173,17 @@ func initRedisClient(config *viper.Viper) (*redis.Client, error) {
 	password := config.GetString("password")
 	poolSize := config.GetInt("pool-size")
 	db := config.GetInt("db")
+	idleTimeout := config.GetInt("idle-timout")
+	if idleTimeout == 0 {
+		idleTimeout = 50
+	}
 
 	client := redis.NewClient(&redis.Options{
 		Addr:               addr,
 		Password:           password,
 		PoolSize:           poolSize,
 		DB:                 db,
-		IdleTimeout:        50 * time.Second,
+		IdleTimeout:        time.Duration(idleTimeout) * time.Second,
 		IdleCheckFrequency: 20 * time.Second,
 	})
 	_, err := client.Ping().Result()

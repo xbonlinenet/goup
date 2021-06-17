@@ -26,13 +26,15 @@ type Conf struct {
 
 func Init() error {
 	loggers := viper.GetStringMap("log")
+
+	forceLogToStdout := viper.GetBool("application.forceLog2Stdout")
 	for k, _ := range loggers {
 		var conf Conf
 		err := viper.Sub("log").Sub(k).Unmarshal(&conf)
 		if err != nil {
 			return err
 		}
-		log := initLogger(&conf)
+		log := initLogger(&conf, forceLogToStdout)
 		logMap[k] = log
 	}
 	return nil
@@ -64,7 +66,7 @@ func Default() *zap.Logger {
 	return testLogger
 }
 
-func initLogger(conf *Conf) *zap.Logger {
+func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 	log := &conf.Logger
 
 	ex, err := os.Executable()
@@ -78,7 +80,9 @@ func initLogger(conf *Conf) *zap.Logger {
 	go func() {
 		for {
 			<-time.After(conf.Interval)
-			log.Rotate()
+			if !forceLogStdout {
+				log.Rotate()
+			}
 		}
 	}()
 
@@ -114,7 +118,12 @@ func initLogger(conf *Conf) *zap.Logger {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	w := zapcore.AddSync(log)
+	var w zapcore.WriteSyncer
+	if !forceLogStdout {
+		w = zapcore.AddSync(log)
+	}else{
+		w = zapcore.AddSync(os.Stdout)
+	}
 	core := zapcore.NewCore(
 		zapcore.NewConsoleEncoder(encoder),
 		w,
