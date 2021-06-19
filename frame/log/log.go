@@ -71,11 +71,12 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 
 	ex, err := os.Executable()
 	if err != nil {
+		fmt.Printf("initLogger panic: %s", err.Error())
 		panic(err)
 	}
 	exPath := filepath.Dir(filepath.Dir(ex))
 	log.Filename = filepath.Join(exPath, log.Filename)
-	fmt.Printf("path: %s\n", log.Filename)
+	fmt.Printf("log path: %s\n", log.Filename)
 
 	go func() {
 		for {

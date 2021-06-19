@@ -12,6 +12,7 @@ require (
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-errors/errors v1.1.1
