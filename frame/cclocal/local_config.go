@@ -6,6 +6,11 @@ import (
 	"github.com/xbonlinenet/goup/frame/cc"
 	"github.com/xbonlinenet/goup/frame/log"
 	"go.uber.org/zap"
+	"path"
+)
+
+const (
+	kEtcConfigPath = "/etc/config"
 )
 
 
@@ -21,8 +26,10 @@ func UnInitConfigCenter() {
 	cc.UnInitConfigCenter()
 }
 
-func GetModule(path string) LocalConfigReader {
-	return GetLocalConfig(path)
+func GetModule(filePath string) LocalConfigReader {
+	// 自动加上/etc/config 路径前缀，要求配置文件放在这个目录下(或者mount到这个目录下)
+	finalPath := path.Join(kEtcConfigPath, filePath)
+	return GetLocalConfig(finalPath)
 }
 
 func Get(module LocalConfigReader, key string, defaultValue interface{}) interface{} {
