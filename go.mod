@@ -36,7 +36,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/valyala/fasthttp v1.16.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
-	github.com/xbonlinenet/alter/lib v0.0.0-20190611130810-2fbf77997692
+	github.com/xbonlinenet/alter/lib v0.0.0-20210616095711-791fbaa6e35d
 	github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect

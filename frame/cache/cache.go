@@ -6,11 +6,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"fmt"
+	"github.com/go-redis/redis"
 	"github.com/xbonlinenet/goup/frame/cache/internal/lrucache"
 	"github.com/xbonlinenet/goup/frame/cache/internal/singleflight"
 	"github.com/xbonlinenet/goup/frame/util"
-	"fmt"
-	"github.com/go-redis/redis"
 	"reflect"
 )
 
@@ -342,7 +342,7 @@ func exampleTertiaryCache() {
 
 	tc.List(&TertiaryItem{
 		func(id interface{}) string {
-			return fmt.Sprint("test:%d", id)
+			return fmt.Sprintf("test:%d", id)
 		},
 		time.Second * 12,
 		func(idList []interface{}, rsp map[interface{}]interface{}) {
