@@ -46,6 +46,8 @@ func GetLocalConfig(cfgFile string) LocalConfigReader {
 	gLocalCfgMgr.lock.Lock()
 	defer gLocalCfgMgr.lock.Unlock()
 
+	fmt.Printf("GetLoalConfig(%s) called\n", cfgFile)
+
 	if gLocalCfgMgr.cfg2reader == nil {
 		gLocalCfgMgr.cfg2reader = make(map[string]LocalConfigReader)
 	}
@@ -74,6 +76,7 @@ func (c *localConfigContext) loadConfigData() error {
 		c.cfg.SetConfigType(c.cfgType)
 	}
 	c.cfg.AddConfigPath(".")
+	fmt.Println("local config file is:", c.cfgFile)
 	c.cfg.SetConfigFile(c.cfgFile)
 	if err := c.cfg.ReadInConfig(); err != nil {
 		return err
