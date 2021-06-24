@@ -73,6 +73,12 @@ func DisableKafkaInit() Option {
 	})
 }
 
+func EnableHttpHealthz() Option {
+	return optionFunc(func(cfg *bootstarpServerConfig){
+		cfg.enableHttpHealthz = true
+	})
+}
+
 // Middlewares 添加自定义的 middleware
 func Middlewares(list []gin.HandlerFunc) Option {
 	return optionFunc(func(cfg *bootstarpServerConfig) {

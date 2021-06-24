@@ -81,7 +81,15 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		gin.SetMode("release")
 	}
 
+	if config.enableHttpHealthz {
+		r.GET("/system/healthz", gateway.HttpHealthz)
+	}
+
 	addr := viper.GetString("server.addr")
+	if util.IsRunningInDockerContainer(){
+		// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
+		addr = "0.0.0.0:8080"
+	}
 	err := r.Run(addr)
 	util.CheckError(err)
 	log.Sugar().Errorf("Occur err: %s", err.Error())
@@ -97,6 +105,7 @@ type bootstarpServerConfig struct {
 	initRedisDisabled 	bool
 	initEsDisabled 	 	bool
 	initKafkaDisabled 	bool
+	enableHttpHealthz	bool
 	middlewareList   []gin.HandlerFunc
 }
 

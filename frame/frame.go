@@ -81,29 +81,13 @@ func InitFramework(serverConfig *bootstarpServerConfig) {
 	log.Default().Info(fmt.Sprintf("config: %s", v))
 
 	util.InitGlobeInfo()
-	if !serverConfig.initDbDisabled {
-		data.InitSQLMgr()
-	}else{
-		log.Default().Info("initDb not allowed")
-	}
 
-	if !serverConfig.initRedisDisabled {
-		data.InitRedisMgr()
-	}else{
-		log.Default().Info("initRedis not allowed")
-	}
-
-	if !serverConfig.initEsDisabled {
-		data.InitESMgr()
-	}else{
-		log.Default().Info("initEs not allowed")
-	}
-
-	if !serverConfig.initKafkaDisabled {
+	callInitFuncByConfigCondition(data.InitSQLMgr, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.mysql")
+	callInitFuncByConfigCondition(data.InitRedisMgr, "data.InitRedisMgr", serverConfig.initRedisDisabled, "data.redis")
+	callInitFuncByConfigCondition(data.InitESMgr, "data.InitESMgr", serverConfig.initEsDisabled, "data.es")
+	callInitFuncByConfigCondition(func() {
 		data.InitKafka(ctx)
-	}else{
-		log.Default().Info("initKafka not allowed")
-	}
+	}, "data.InitKafka", serverConfig.initKafkaDisabled, "data.kafka")
 
 	users := viper.GetStringSlice("alter.users")
 	robotUrls := viper.GetStringSlice("alter.robot-urls")
@@ -126,6 +110,18 @@ func InitFramework(serverConfig *bootstarpServerConfig) {
 		panic("zkServers is empty")
 	}
 	cc.InitConfigCenter(zkServers)
+}
+
+func callInitFuncByConfigCondition(initFunc func(), funcName string, disabled bool, keyInCfgFile string) {
+	if !disabled {
+		if viper.Sub(keyInCfgFile) != nil {
+			initFunc()
+		}else{
+			log.Sugar().Warnf("%s not configured, %s() skipped.", keyInCfgFile, funcName)
+		}
+	}else{
+		log.Sugar().Infof("%s not allowed", funcName)
+	}
 }
 
 func loadIncludeConfigFiles(items map[string]string, basePath string) {
