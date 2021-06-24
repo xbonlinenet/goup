@@ -29,7 +29,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		config.beforeInit()
 	}
 
-	InitFramework()
+	InitFramework(config)
 	defer UnInitFramework()
 
 	r := gin.New()
@@ -93,6 +93,10 @@ type bootstarpServerConfig struct {
 	customRouter     func(r *gin.Engine)
 	versionHandler   func(c *gin.Context)
 	reportApiDocAddr string
+	initDbDisabled	 	bool
+	initRedisDisabled 	bool
+	initEsDisabled 	 	bool
+	initKafkaDisabled 	bool
 	middlewareList   []gin.HandlerFunc
 }
 

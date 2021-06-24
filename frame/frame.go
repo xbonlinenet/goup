@@ -30,14 +30,23 @@ var (
 	cancel context.CancelFunc
 )
 
-func Bootstrap(run func()) {
-	InitFramework()
+func Bootstrap(run func(), options ...Option) {
+	config := &bootstarpServerConfig{}
+	for _, opt := range options {
+		opt.apply(config)
+	}
+
+	if config.beforeInit != nil {
+		config.beforeInit()
+	}
+
+	InitFramework(config)
 	defer UnInitFramework()
 	run()
 }
 
 // InitFramework 初始化框架
-func InitFramework() {
+func InitFramework(serverConfig *bootstarpServerConfig) {
 	flags.DisplayCompileTimeFlags()
 
 	start = time.Now().Unix()
@@ -72,10 +81,29 @@ func InitFramework() {
 	log.Default().Info(fmt.Sprintf("config: %s", v))
 
 	util.InitGlobeInfo()
-	data.InitSQLMgr()
-	data.InitRedisMgr()
-	data.InitESMgr()
-	data.InitKafka(ctx)
+	if !serverConfig.initDbDisabled {
+		data.InitSQLMgr()
+	}else{
+		log.Default().Info("initDb not allowed")
+	}
+
+	if !serverConfig.initRedisDisabled {
+		data.InitRedisMgr()
+	}else{
+		log.Default().Info("initRedis not allowed")
+	}
+
+	if !serverConfig.initEsDisabled {
+		data.InitESMgr()
+	}else{
+		log.Default().Info("initEs not allowed")
+	}
+
+	if !serverConfig.initKafkaDisabled {
+		data.InitKafka(ctx)
+	}else{
+		log.Default().Info("initKafka not allowed")
+	}
 
 	users := viper.GetStringSlice("alter.users")
 	robotUrls := viper.GetStringSlice("alter.robot-urls")

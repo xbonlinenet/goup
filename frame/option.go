@@ -49,6 +49,30 @@ func ReportApi(addr string) Option {
 	})
 }
 
+func DisableDbInit() Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.initDbDisabled = true
+	})
+}
+
+func DisableRedisInit() Option {
+	return optionFunc(func(cfg *bootstarpServerConfig){
+		cfg.initRedisDisabled = true
+	})
+}
+
+func DisableEsInit() Option {
+	return optionFunc(func(cfg *bootstarpServerConfig){
+		cfg.initEsDisabled = true
+	})
+}
+
+func DisableKafkaInit() Option {
+	return optionFunc(func(cfg *bootstarpServerConfig){
+		cfg.initKafkaDisabled = true
+	})
+}
+
 // Middlewares 添加自定义的 middleware
 func Middlewares(list []gin.HandlerFunc) Option {
 	return optionFunc(func(cfg *bootstarpServerConfig) {
