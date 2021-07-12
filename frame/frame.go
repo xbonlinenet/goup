@@ -40,13 +40,12 @@ func Bootstrap(run func(), options ...Option) {
 		config.beforeInit()
 	}
 
-	InitFramework(config)
+	initFrameWorkImpl(config)
 	defer UnInitFramework()
 	run()
 }
 
-// InitFramework 初始化框架
-func InitFramework(serverConfig *bootstarpServerConfig) {
+func initFrameWorkImpl(serverConfig *bootstarpServerConfig){
 	flags.DisplayCompileTimeFlags()
 
 	start = time.Now().Unix()
@@ -107,9 +106,21 @@ func InitFramework(serverConfig *bootstarpServerConfig) {
 
 	zkServers := viper.GetStringSlice("data.zk.config.servers")
 	if len(zkServers) == 0 {
-		panic("zkServers is empty")
+		if !util.IsRunningInDockerContainer() {
+			panic("zkServers is empty")
+		}else{
+			log.Default().Warn("!!! 'zkServers' not configured, and service is running in container.")
+		}
+	}else{
+		cc.InitConfigCenter(zkServers)
 	}
-	cc.InitConfigCenter(zkServers)
+}
+
+// InitFramework 初始化框架
+func InitFramework() {
+	config := &bootstarpServerConfig{}
+
+	initFrameWorkImpl(config)
 }
 
 func callInitFuncByConfigCondition(initFunc func(), funcName string, disabled bool, keyInCfgFile string) {

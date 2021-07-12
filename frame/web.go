@@ -29,7 +29,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		config.beforeInit()
 	}
 
-	InitFramework(config)
+	initFrameWorkImpl(config)
 	defer UnInitFramework()
 
 	r := gin.New()
@@ -89,6 +89,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	if util.IsRunningInDockerContainer(){
 		// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
 		addr = "0.0.0.0:8080"
+		log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
 	}
 	err := r.Run(addr)
 	util.CheckError(err)
