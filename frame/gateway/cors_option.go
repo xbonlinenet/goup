@@ -45,6 +45,7 @@ func (h *CORSHandler) CheckOriginByRequest(r *http.Request) bool {
 func (h *CORSHandler) CheckOrigin(origin string) bool {
 	if origin == "" {
 		// 非浏览器请求
+		log.Default().Warn("CheckOrigin(): found 'Origin' is empty from header!")
 		return false
 	}
 
@@ -54,7 +55,7 @@ func (h *CORSHandler) CheckOrigin(origin string) bool {
 
 	originURL, err := url.Parse(origin)
 	if err != nil {
-		log.Default().Warn("ParseOriginErr", zap.Error(err))
+		log.Default().Warn("ParseOriginErr", zap.Error(err), zap.String("origin", origin))
 		return false
 	}
 
@@ -65,6 +66,8 @@ func (h *CORSHandler) CheckOrigin(origin string) bool {
 			break
 		}
 	}
+	log.Default().Debug("CheckOrigin() result", zap.Bool("isAllow", isAllow),
+		zap.String("origin", origin))
 
 	return isAllow
 }
