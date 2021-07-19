@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"github.com/xbonlinenet/goup/frame/log"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"sync"
 )
@@ -76,16 +78,18 @@ func (c *localConfigContext) loadConfigData() error {
 		c.cfg.SetConfigType(c.cfgType)
 	}
 	c.cfg.AddConfigPath(".")
-	fmt.Println("local config file is:", c.cfgFile)
 	c.cfg.SetConfigFile(c.cfgFile)
 	if err := c.cfg.ReadInConfig(); err != nil {
+		log.Default().Error("!!! read config file error", zap.Error(err), zap.String("cfgFile", c.cfgFile))
 		return err
+	}else{
+		fmt.Println("read config file succeeded", c.cfgFile)
 	}
 	c.cfg.WatchConfig()
 	c.cfg.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Println("Config file changed:", e.Name)
 		if err := c.readRawData(); err != nil {
-			fmt.Println("read raw data error:", err)
+			fmt.Println("read config raw data error:", err)
 		}
 	})
 

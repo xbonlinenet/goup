@@ -1,11 +1,12 @@
 package gateway
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/xbonlinenet/goup/frame/util"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
-
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
+	"strings"
 
 	"github.com/xbonlinenet/goup/frame/log"
 )
@@ -13,9 +14,10 @@ import (
 type CORSHandler struct {
 	AllowHosts []string
 	AllowAll   bool
+	allowedCustomHeaders []string
 }
 
-func NewCORSHandler(allowHosts []string) *CORSHandler {
+func NewCORSHandler(allowHosts []string, customHeaders ...string) *CORSHandler {
 	var allowAll bool
 
 	for _, host := range allowHosts {
@@ -28,6 +30,7 @@ func NewCORSHandler(allowHosts []string) *CORSHandler {
 	return &CORSHandler{
 		AllowHosts: allowHosts,
 		AllowAll:   allowAll,
+		allowedCustomHeaders: customHeaders,
 	}
 }
 
@@ -69,11 +72,25 @@ func (h *CORSHandler) BuildCORSHeaders(r *http.Request) map[string]string {
 		origin = "*"
 	}
 
+	allowedHeaders := []string{
+		"Origin",
+		"X-Requested-With",
+		"Content-Type",
+		"Accept",
+	}
+	if len(h.allowedCustomHeaders) > 0 {
+		for _, customHeader := range h.allowedCustomHeaders {
+			if !util.StringArrayContains(allowedHeaders, customHeader) {
+				allowedHeaders = append(allowedHeaders, customHeader)
+			}
+		}
+	}
+
 	headers := map[string]string{
 		"Access-Control-Allow-Credentials": "true",
 		"Access-Control-Allow-Methods":     "GET,HEAD,POST,PUT,DELETE",
 		"Access-Control-Allow-Origin":      origin,
-		"Access-Control-Allow-Headers":     "Origin, X-Requested-With, Content-Type, Accept",
+		"Access-Control-Allow-Headers":     strings.Join(allowedHeaders, ","),
 	}
 	return headers
 }

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame/gateway"
