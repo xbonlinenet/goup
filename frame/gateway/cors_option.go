@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/xbonlinenet/goup/frame/util"
 	"go.uber.org/zap"
@@ -26,6 +27,8 @@ func NewCORSHandler(allowHosts []string, customHeaders ...string) *CORSHandler {
 			break
 		}
 	}
+
+	fmt.Println("NewCORSHandler called, customHeaders:", customHeaders)
 
 	return &CORSHandler{
 		AllowHosts: allowHosts,
@@ -85,12 +88,15 @@ func (h *CORSHandler) BuildCORSHeaders(r *http.Request) map[string]string {
 			}
 		}
 	}
+	allowedHeadersStr := strings.Join(allowedHeaders, ",")
+	log.Default().Debug("cors allowedHeaders", zap.String("headers", allowedHeadersStr),
+		zap.Any("customHeaders", h.allowedCustomHeaders))
 
 	headers := map[string]string{
 		"Access-Control-Allow-Credentials": "true",
 		"Access-Control-Allow-Methods":     "GET,HEAD,POST,PUT,DELETE",
 		"Access-Control-Allow-Origin":      origin,
-		"Access-Control-Allow-Headers":     strings.Join(allowedHeaders, ","),
+		"Access-Control-Allow-Headers":     allowedHeadersStr,
 	}
 	return headers
 }
