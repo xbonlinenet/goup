@@ -1,7 +1,10 @@
 package cache
 
 import (
+	"bytes"
+	"compress/gzip"
 	"errors"
+	"io/ioutil"
 	"log"
 	"sync/atomic"
 	"time"
@@ -308,6 +311,8 @@ type TertiaryCache struct {
 	// 序列化
 	Marshal   func(interface{}) ([]byte, error)
 	Unmarshal func([]byte, interface{}) error
+	//压缩
+	Compressed bool
 }
 
 func convertList(idList []interface{}, idResM map[interface{}]interface{}) []interface{} {
@@ -352,6 +357,7 @@ func exampleTertiaryCache() {
 		},
 		[]interface{}{12, 2, 3},
 		reflect.TypeOf(1),
+		false,
 	})
 
 }
@@ -362,11 +368,13 @@ type TertiaryItem struct {
 	GetRemoteData      func(idList []interface{}, rsp map[interface{}]interface{})
 	IdList             []interface{}
 	DataType           reflect.Type
+	Compressed         bool
 }
 
 func (b TertiaryCache) List(item *TertiaryItem) []interface{} {
 
 	b.CacheKeyFormatFunc = item.CacheKeyFormatFunc
+	b.Compressed = item.Compressed
 	idList := item.IdList
 	idResM := make(map[interface{}]interface{}, len(idList))
 	// 1.进程内缓存
@@ -397,6 +405,7 @@ func (b TertiaryCache) List(item *TertiaryItem) []interface{} {
 func (b TertiaryCache) Map(item *TertiaryItem) map[interface{}]interface{} {
 
 	b.CacheKeyFormatFunc = item.CacheKeyFormatFunc
+	b.Compressed = item.Compressed
 	idList := item.IdList
 	idResM := make(map[interface{}]interface{}, len(idList))
 	// 1.进程内缓存
@@ -469,9 +478,13 @@ func (b TertiaryCache) RedisCache(idList []interface{}, rsp map[interface{}]inte
 				failed = append(failed, id)
 				continue
 			}
+			if b.Compressed {
+				bytes, err = gzipDecode(bytes)
+			}
 			value := reflect.New(dataType).Interface()
 			err = b.Unmarshal(bytes, value)
 			util.CheckError(err)
+
 			rsp[id] = value
 			success = append(success, id)
 		} else {
@@ -509,6 +522,10 @@ func (b TertiaryCache) saveRedisCache(idList []interface{}, rsp map[interface{}]
 		if b.Marshal != nil {
 			value, err := b.Marshal(rsp[id])
 			util.CheckError(err)
+			if b.Compressed {
+				value, err = gzipEncode(value)
+				util.CheckError(err)
+			}
 			pipe.Set(cacheKey, value, expiration)
 		} else {
 			//fmt.Println(cacheKey, rsp[id], expiration)
@@ -530,4 +547,36 @@ func (b TertiaryCache) saveProcessCache(idList []interface{}, rsp map[interface{
 		cacheKey := b.CacheKeyFormatFunc(id)
 		b.localCache.SetPtr(cacheKey, rsp[id])
 	}
+}
+
+func gzipEncode(in []byte) ([]byte, error) {
+	var (
+		buffer bytes.Buffer
+		out    []byte
+		err    error
+	)
+	writer := gzip.NewWriter(&buffer)
+	_, err = writer.Write(in)
+	if err != nil {
+		err = writer.Close()
+		return out, err
+	}
+	if err = writer.Close(); err != nil {
+		return out, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func gzipDecode(in []byte) ([]byte, error) {
+	reader, err := gzip.NewReader(bytes.NewReader(in))
+	if err != nil {
+		var out []byte
+		return out, err
+	}
+	defer func() {
+		if err = reader.Close(); err != nil {
+			println("gzip decode failed", err.Error())
+		}
+	}()
+	return ioutil.ReadAll(reader)
 }
