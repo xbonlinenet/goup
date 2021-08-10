@@ -312,7 +312,7 @@ type TertiaryCache struct {
 	Marshal   func(interface{}) ([]byte, error)
 	Unmarshal func([]byte, interface{}) error
 	//压缩
-	Compressed bool
+	DataCompress bool
 }
 
 func convertList(idList []interface{}, idResM map[interface{}]interface{}) []interface{} {
@@ -368,13 +368,13 @@ type TertiaryItem struct {
 	GetRemoteData      func(idList []interface{}, rsp map[interface{}]interface{})
 	IdList             []interface{}
 	DataType           reflect.Type
-	Compressed         bool
+	DataCompress       bool
 }
 
 func (b TertiaryCache) List(item *TertiaryItem) []interface{} {
 
 	b.CacheKeyFormatFunc = item.CacheKeyFormatFunc
-	b.Compressed = item.Compressed
+	b.DataCompress = item.DataCompress
 	idList := item.IdList
 	idResM := make(map[interface{}]interface{}, len(idList))
 	// 1.进程内缓存
@@ -405,7 +405,7 @@ func (b TertiaryCache) List(item *TertiaryItem) []interface{} {
 func (b TertiaryCache) Map(item *TertiaryItem) map[interface{}]interface{} {
 
 	b.CacheKeyFormatFunc = item.CacheKeyFormatFunc
-	b.Compressed = item.Compressed
+	b.DataCompress = item.DataCompress
 	idList := item.IdList
 	idResM := make(map[interface{}]interface{}, len(idList))
 	// 1.进程内缓存
@@ -478,7 +478,7 @@ func (b TertiaryCache) RedisCache(idList []interface{}, rsp map[interface{}]inte
 				failed = append(failed, id)
 				continue
 			}
-			if b.Compressed {
+			if b.DataCompress {
 				bytes, err = gzipDecode(bytes)
 			}
 			value := reflect.New(dataType).Interface()
@@ -522,7 +522,7 @@ func (b TertiaryCache) saveRedisCache(idList []interface{}, rsp map[interface{}]
 		if b.Marshal != nil {
 			value, err := b.Marshal(rsp[id])
 			util.CheckError(err)
-			if b.Compressed {
+			if b.DataCompress {
 				value, err = gzipEncode(value)
 				util.CheckError(err)
 			}
