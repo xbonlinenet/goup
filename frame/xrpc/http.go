@@ -31,6 +31,7 @@ func init() {
 
 const (
 	DefaultTimeout = 10 * time.Second
+	HttpTimeoutLevel2 = 5 * time.Second
 )
 
 // RequestOptions 请求设置
@@ -41,6 +42,7 @@ type RequestOptions struct {
 	// Headers
 	Headers map[string]string
 
+	ReqBodyFormEncoded	bool
 	Verbose bool
 }
 
@@ -72,6 +74,12 @@ func WithTimeout(timeout time.Duration) RequestOption {
 func WithVerbose(verbose bool) RequestOption {
 	return ApplyOption(func(options *RequestOptions) {
 		options.Verbose = verbose
+	})
+}
+
+func WithFormEncoded(formEncoded bool) RequestOption {
+	return ApplyOption(func(options *RequestOptions){
+		options.ReqBodyFormEncoded = formEncoded
 	})
 }
 
