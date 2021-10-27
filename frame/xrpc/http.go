@@ -44,6 +44,7 @@ type RequestOptions struct {
 
 	ReqBodyFormEncoded	bool
 	Verbose bool
+	SlowAlertAllowed bool
 }
 
 // options abs
@@ -62,6 +63,12 @@ func WithHeaders(headers map[string]string) RequestOption {
 		for key, val := range headers {
 			options.Headers[key] = val
 		}
+	})
+}
+
+func WithSlowAlert(alertAllowed bool) RequestOption {
+	return ApplyOption(func(options *RequestOptions){
+		options.SlowAlertAllowed = alertAllowed
 	})
 }
 

@@ -33,7 +33,7 @@ func HttpPostWithJsonResp(apiUrl string, postParam interface{},  resp interface{
 		timeCost := time.Since(start)
 		if timeCost.Seconds() > 1.0 {
 			log.Default().Warn("HttpPostWithJsonResp rpc is slow", zap.String("apiUrl", apiUrl), zap.Duration("cost", timeCost))
-			if timeCost.Seconds() > 2.0 {
+			if reqOpts.SlowAlertAllowed && timeCost.Seconds() > 2.0 {
 				alter.Notify("HttpPostWithJsonResp rpc is slow", fmt.Sprintf("apiUrl：%s, cost: %.2f secs", apiUrl, timeCost.Seconds()), "community-common")
 			}
 		}else{
@@ -112,7 +112,7 @@ func HttpGetWithJsonResp(apiUrl string, getParams map[string]interface{}, resp i
 		timeCost := time.Since(start)
 		if timeCost.Seconds() > 1.0 {
 			log.Default().Warn("HttpGetWithJsonResp rpc is slow", zap.String("apiUrl", apiUrl), zap.Duration("cost", timeCost))
-			if timeCost.Seconds() > 2.0 {
+			if reqOpts.SlowAlertAllowed && timeCost.Seconds() > 2.0 {
 				alter.Notify("HttpGetWithJsonResp rpc is slow", fmt.Sprintf("apiUrl：%s, cost: %.2f secs", apiUrl, timeCost.Seconds()), "biz_server")
 			}
 		}else{
