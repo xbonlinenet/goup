@@ -171,7 +171,7 @@ func handlerApiRequest(c *gin.Context) {
 			// 正常响应,返回数据加密
 			if apiHandlerInfo.cryptoHandler != nil && apiHandlerInfo.cryptoHandler.encryptImpl != nil {
 				respStr, _ := jsoniter.MarshalToString(response)
-				response = apiHandlerInfo.cryptoHandler.encryptImpl(respStr)
+				response = apiHandlerInfo.cryptoHandler.encryptImpl(c, respStr)
 			}
 		} else {
 			err = ret[1].Interface().(error)

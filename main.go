@@ -46,7 +46,7 @@ func decryptImpl(c *gin.Context) bool {
 	log.Default().Info("into decryptImpl")
 	return true
 }
-func encryptImpl(d interface{}) string {
+func encryptImpl(c *gin.Context, d interface{}) string {
 	//	判断header是否有Digest
 	log.Default().Info("into encryptImpl")
 	return "x"
