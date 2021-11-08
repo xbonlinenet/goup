@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -82,7 +83,20 @@ func handlerApiRequest(c *gin.Context) {
 		// c.String(http.StatusNotFound, fmt.Sprintf("api: %s not registered!", apiKey))
 		return
 	}
-
+	//处理签名校验
+	if apiHandlerInfo.signCheckHandler != nil {
+		if !apiHandlerInfo.signCheckHandler.signCheck(c) {
+			failHandler(c, http.StatusBadRequest, ErrInvalidSignature, "非法签名")
+			return
+		}
+	}
+	//处理数据解密
+	if apiHandlerInfo.cryptoHandler != nil && apiHandlerInfo.cryptoHandler.decryptImpl != nil {
+		if !apiHandlerInfo.cryptoHandler.decryptImpl(c) {
+			failHandler(c, http.StatusBadRequest, ErrCryptoError, "数据加密错误")
+			return
+		}
+	}
 	// 处理 CORS
 	if apiHandlerInfo.corsHandler != nil &&
 		apiHandlerInfo.corsHandler.CheckOriginByRequest(c.Request) {
@@ -154,6 +168,11 @@ func handlerApiRequest(c *gin.Context) {
 		var response interface{}
 		if ret[1].IsNil() {
 			response = ret[0].Interface()
+			// 正常响应,返回数据加密
+			if apiHandlerInfo.cryptoHandler != nil && apiHandlerInfo.cryptoHandler.encryptImpl != nil {
+				respStr, _ := jsoniter.MarshalToString(response)
+				response = apiHandlerInfo.cryptoHandler.encryptImpl(respStr)
+			}
 		} else {
 			err = ret[1].Interface().(error)
 			response = Resp{Code: ErrLogicError, Message: err.Error()}
@@ -166,7 +185,6 @@ func handlerApiRequest(c *gin.Context) {
 		for key, val := range apiContext.respHeaders {
 			c.Header(key, val)
 		}
-
 		if apiHandlerInfo.respType == XmlType {
 			c.XML(200, response)
 		} else {

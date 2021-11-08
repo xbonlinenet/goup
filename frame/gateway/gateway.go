@@ -32,6 +32,9 @@ const (
 
 	// ErrUnknowError 未知服务错误
 	ErrUnknowError = 7
+
+	// ErrCryptoError 数据加密异常
+	ErrCryptoError = 8
 )
 
 type Resp struct {
@@ -107,7 +110,10 @@ type HandlerInfo struct {
 
 	pt       paramType
 	respType respType
-
+	// 加解密处理
+	cryptoHandler *CryptoHandler
+	//签名校验处理
+	signCheckHandler *SignCheckHandler
 	// preHandlers 在业务Handler 处理前，定义的预处理
 	preHandlers []PreHandler
 
