@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -170,8 +169,7 @@ func handlerApiRequest(c *gin.Context) {
 			response = ret[0].Interface()
 			// 正常响应,返回数据加密
 			if apiHandlerInfo.cryptoHandler != nil && apiHandlerInfo.cryptoHandler.encryptImpl != nil {
-				respStr, _ := jsoniter.MarshalToString(response)
-				response = apiHandlerInfo.cryptoHandler.encryptImpl(c, respStr)
+				response = apiHandlerInfo.cryptoHandler.encryptImpl(c, response)
 			}
 		} else {
 			err = ret[1].Interface().(error)
@@ -187,6 +185,8 @@ func handlerApiRequest(c *gin.Context) {
 		}
 		if apiHandlerInfo.respType == XmlType {
 			c.XML(200, response)
+		} else if apiHandlerInfo.respType == StringType {
+			c.String(200, "%v", response)
 		} else {
 			c.PureJSON(200, response)
 		}

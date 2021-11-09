@@ -97,8 +97,9 @@ const (
 type respType int
 
 const (
-	JsonType respType = 0
-	XmlType  respType = 1
+	JsonType   respType = 0
+	XmlType    respType = 1
+	StringType respType = 2
 )
 
 type HandlerInfo struct {
