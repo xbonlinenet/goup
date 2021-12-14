@@ -1,14 +1,15 @@
 package cc
 
 import (
-	"github.com/xbonlinenet/goup/frame/log"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/spf13/cast"
-	"github.com/xbonlinenet/go_config_center"
-	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/spf13/cast"
+	"github.com/xbonlinenet/go_config_center"
+	"github.com/xbonlinenet/goup/frame/log"
+	"go.uber.org/zap"
 )
 
 var (
@@ -151,6 +152,30 @@ func GetRaw(path string, defaultValue string) string {
 		return defaultValue
 	}
 	return string(buf)
+}
+
+func GetStringSlice(module *go_config_center.ConfigModule, key string, defaultValue []string) []string {
+	value := module.Get(key)
+	if value == nil {
+		return defaultValue
+	}
+	f, err := cast.ToStringSliceE(value)
+	if err != nil {
+		return defaultValue
+	}
+	return f
+}
+
+func GetIntSlice(module *go_config_center.ConfigModule, key string, defaultValue []int) []int {
+	value := module.Get(key)
+	if value == nil {
+		return defaultValue
+	}
+	f, err := cast.ToIntSliceE(value)
+	if err != nil {
+		return defaultValue
+	}
+	return f
 }
 
 func ConvertStringToMapStruct(json string) map[string]interface{} {
