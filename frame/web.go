@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/gateway"
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/recovery"
@@ -18,7 +20,10 @@ import (
 
 func BootstrapServer(ctx context.Context, options ...Option) {
 
-	config := &bootstarpServerConfig{}
+	config := &bootstarpServerConfig{
+		customSqlConf:   make(map[string]*data.SQLConfig),
+		custonRedisConf: make(map[string]*data.RedisConfig),
+	}
 
 	for _, opt := range options {
 		opt.apply(config)
@@ -85,7 +90,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	}
 
 	addr := viper.GetString("server.addr")
-	if util.IsRunningInDockerContainer(){
+	if util.IsRunningInDockerContainer() {
 		// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
 		addr = "0.0.0.0:8080"
 		log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
@@ -96,17 +101,19 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 }
 
 type bootstarpServerConfig struct {
-	beforeInit       func()
-	beforeServerRun  func()
-	customRouter     func(r *gin.Engine)
-	versionHandler   func(c *gin.Context)
-	reportApiDocAddr string
-	initDbDisabled	 	bool
-	initRedisDisabled 	bool
-	initEsDisabled 	 	bool
-	initKafkaDisabled 	bool
-	enableHttpHealthz	bool
-	middlewareList   []gin.HandlerFunc
+	beforeInit        func()
+	beforeServerRun   func()
+	customRouter      func(r *gin.Engine)
+	versionHandler    func(c *gin.Context)
+	reportApiDocAddr  string
+	initDbDisabled    bool
+	initRedisDisabled bool
+	initEsDisabled    bool
+	initKafkaDisabled bool
+	enableHttpHealthz bool
+	middlewareList    []gin.HandlerFunc
+	customSqlConf     map[string]*data.SQLConfig   // 自定义的 Mysql 配置
+	custonRedisConf   map[string]*data.RedisConfig // 自定义 Redis 配置
 }
 
 var httpClient = &http.Client{

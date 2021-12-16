@@ -3,19 +3,28 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"net/http"
+
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/xbonlinenet/goup/demo"
 	"github.com/xbonlinenet/goup/frame"
+	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/flags"
 	"github.com/xbonlinenet/goup/frame/gateway"
 	"github.com/xbonlinenet/goup/frame/log"
 )
 
 func main() {
+
+	customSqlConf := map[string]*data.SQLConfig{
+		"custom": {
+			URL: "test:test@tcp(192.168.0.22:3306)/goup?parseTime=True&loc=Local&multiStatements=true&charset=utf8mb4",
+		},
+	}
+
 	ctx := context.Background()
 	frame.BootstrapServer(
 		ctx,
@@ -23,6 +32,7 @@ func main() {
 		frame.Version(version),
 		frame.CustomRouter(customRouter),
 		frame.ReportApi("http://192.168.0.22:14000/api/doc/report"),
+		frame.CustomSqlConf(customSqlConf),
 	)
 }
 
@@ -36,6 +46,8 @@ func version(c *gin.Context) {
 
 func customRouter(r *gin.Engine) {
 	r.GET("hello", func(c *gin.Context) {
+		db := data.MustGetDB("custom")
+		fmt.Printf("%v\n", db)
 		c.String(200, "Hello world!")
 	})
 }

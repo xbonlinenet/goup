@@ -21,6 +21,24 @@ var (
 	ErrRedisMgrNotInited = errors.New("redis manager not inited")
 )
 
+type RedisConfig struct {
+	// 是否集群模式
+	Cluster bool
+	// 连接地址信息, 单个实例则使用第一个地址
+	Addrs []string
+	// 密码: 没用不用赋值
+	Password string
+
+	// Redis db, 非集群模式有效
+	DB int
+
+	// 连接池大小
+	PoolSize int
+
+	// 连接空闲时间，默认 5min
+	IdleTimeout int
+}
+
 // ErrRedisConfigNotFound 配置未找到错误
 type ErrRedisConfigNotFound struct {
 	ConfigName string
@@ -40,8 +58,32 @@ func (e ErrRedisInitError) Error() string {
 }
 
 // InitRedisMgr 初始化 Redis
-func InitRedisMgr() {
-	redisMgr = newRedisMgr(viper.Sub("data.redis"))
+func InitRedisMgr(custom map[string]*RedisConfig) {
+
+	redisSection := viper.Sub("data.redis")
+	for item := range redisSection.AllSettings() {
+		conf := redisSection.Sub(item)
+
+		cluster := conf.GetBool("cluster")
+		addrs := make([]string, 0)
+		if cluster {
+			addrs = conf.GetStringSlice("addrs")
+		} else {
+			addrs = append(addrs, conf.GetString("addr"))
+		}
+
+		config := &RedisConfig{
+			Cluster:     cluster,
+			Addrs:       addrs,
+			Password:    conf.GetString("password"),
+			PoolSize:    conf.GetInt("pool-size"),
+			DB:          conf.GetInt("db"),
+			IdleTimeout: conf.GetInt("idle-timout"),
+		}
+		custom[item] = config
+	}
+
+	redisMgr = newRedisMgr(custom)
 }
 
 // UninitRedisMgr 反初始化 Redis 相关
@@ -71,7 +113,7 @@ func MustGetRedis(name string) redis.Cmdable {
 }
 
 // newRedisMgr 根据配置创建 RedisMgr
-func newRedisMgr(conf *viper.Viper) *RedisMgr {
+func newRedisMgr(conf map[string]*RedisConfig) *RedisMgr {
 	redisMgr := &RedisMgr{
 		redisMap:    make(map[string]*redis.Client),
 		clusterMap:  make(map[string]*redis.ClusterClient),
@@ -86,17 +128,17 @@ type RedisMgr struct {
 	redisMap    map[string]*redis.Client
 	clusterMap  map[string]*redis.ClusterClient
 	mutex       *sync.Mutex
-	redisConfig *viper.Viper
+	redisConfig map[string]*RedisConfig
 }
 
 // GetRedis 获取 redis 实例
 func (mgr *RedisMgr) getRedis(name string) (redis.Cmdable, error) {
-	config := mgr.redisConfig.Sub(name)
-	if config == nil {
+	config, ok := mgr.redisConfig[name]
+	if !ok {
 		return nil, ErrRedisConfigNotFound{name}
 	}
 
-	isCluster := config.GetBool("cluster")
+	isCluster := config.Cluster
 	mgr.mutex.Lock()
 	defer mgr.mutex.Unlock()
 
@@ -129,12 +171,12 @@ func (mgr *RedisMgr) getRedis(name string) (redis.Cmdable, error) {
 }
 
 func (mgr *RedisMgr) mustGetRedis(name string) redis.Cmdable {
-	config := mgr.redisConfig.Sub(name)
-	if config == nil {
+	config, ok := mgr.redisConfig[name]
+	if !ok {
 		panic(ErrRedisConfigNotFound{name})
 	}
 
-	isCluster := config.GetBool("cluster")
+	isCluster := config.Cluster
 	mgr.mutex.Lock()
 	defer mgr.mutex.Unlock()
 
@@ -165,15 +207,15 @@ func (mgr *RedisMgr) mustGetRedis(name string) redis.Cmdable {
 
 }
 
-func initRedisClient(config *viper.Viper) (*redis.Client, error) {
-	addr := config.GetString("addr")
+func initRedisClient(config *RedisConfig) (*redis.Client, error) {
+	addr := config.Addrs[0]
 	if len(addr) == 0 {
 		addr = "localhost:6379"
 	}
-	password := config.GetString("password")
-	poolSize := config.GetInt("pool-size")
-	db := config.GetInt("db")
-	idleTimeout := config.GetInt("idle-timout")
+	password := config.Password
+	poolSize := config.PoolSize
+	db := config.DB
+	idleTimeout := config.IdleTimeout
 	if idleTimeout == 0 {
 		idleTimeout = 50
 	}
@@ -194,18 +236,17 @@ func initRedisClient(config *viper.Viper) (*redis.Client, error) {
 	return client, nil
 }
 
-func initRedisClusterClient(config *viper.Viper) (*redis.ClusterClient, error) {
-	addrs := config.GetStringSlice("addrs")
+func initRedisClusterClient(config *RedisConfig) (*redis.ClusterClient, error) {
+	addrs := config.Addrs
 	if len(addrs) <= 0 {
 		return nil, ErrRedisInitError{errors.New("cluster hasn't any addr")}
 	}
-	password := config.GetString("password")
-	poolSize := config.GetInt("pool-size")
 
 	cluster := redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:        addrs,
-		Password:     password,
-		PoolSize:     poolSize,
+		Password:     config.Password,
+		PoolSize:     config.PoolSize,
+		IdleTimeout:  time.Duration(config.IdleTimeout) * time.Second,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		PoolTimeout:  30 * time.Second,

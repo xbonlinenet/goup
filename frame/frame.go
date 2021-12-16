@@ -31,7 +31,10 @@ var (
 )
 
 func Bootstrap(run func(), options ...Option) {
-	config := &bootstarpServerConfig{}
+	config := &bootstarpServerConfig{
+		customSqlConf:   make(map[string]*data.SQLConfig),
+		custonRedisConf: make(map[string]*data.RedisConfig),
+	}
 	for _, opt := range options {
 		opt.apply(config)
 	}
@@ -45,7 +48,7 @@ func Bootstrap(run func(), options ...Option) {
 	run()
 }
 
-func initFrameWorkImpl(serverConfig *bootstarpServerConfig){
+func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 	flags.DisplayCompileTimeFlags()
 
 	start = time.Now().Unix()
@@ -81,8 +84,14 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig){
 
 	util.InitGlobeInfo()
 
-	callInitFuncByConfigCondition(data.InitSQLMgr, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.mysql")
-	callInitFuncByConfigCondition(data.InitRedisMgr, "data.InitRedisMgr", serverConfig.initRedisDisabled, "data.redis")
+	callInitFuncByConfigCondition(func() {
+		data.InitSQLMgr(serverConfig.customSqlConf)
+	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.mysql")
+
+	callInitFuncByConfigCondition(func() {
+		data.InitRedisMgr(serverConfig.custonRedisConf)
+	}, "data.InitRedisMgr", serverConfig.initRedisDisabled, "data.redis")
+
 	callInitFuncByConfigCondition(data.InitESMgr, "data.InitESMgr", serverConfig.initEsDisabled, "data.es")
 	callInitFuncByConfigCondition(func() {
 		data.InitKafka(ctx)
@@ -108,10 +117,10 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig){
 	if len(zkServers) == 0 {
 		if !util.IsRunningInDockerContainer() {
 			panic("zkServers is empty")
-		}else{
+		} else {
 			log.Default().Warn("!!! 'zkServers' not configured, and service is running in container.")
 		}
-	}else{
+	} else {
 		cc.InitConfigCenter(zkServers)
 	}
 }
@@ -127,10 +136,10 @@ func callInitFuncByConfigCondition(initFunc func(), funcName string, disabled bo
 	if !disabled {
 		if viper.Sub(keyInCfgFile) != nil {
 			initFunc()
-		}else{
+		} else {
 			log.Sugar().Warnf("%s not configured, %s() skipped.", keyInCfgFile, funcName)
 		}
-	}else{
+	} else {
 		log.Sugar().Infof("%s not allowed", funcName)
 	}
 }

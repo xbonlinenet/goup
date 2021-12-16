@@ -1,6 +1,9 @@
 package frame
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/xbonlinenet/goup/frame/data"
+)
 
 // An Option configures
 type Option interface {
@@ -56,25 +59,25 @@ func DisableDbInit() Option {
 }
 
 func DisableRedisInit() Option {
-	return optionFunc(func(cfg *bootstarpServerConfig){
+	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.initRedisDisabled = true
 	})
 }
 
 func DisableEsInit() Option {
-	return optionFunc(func(cfg *bootstarpServerConfig){
+	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.initEsDisabled = true
 	})
 }
 
 func DisableKafkaInit() Option {
-	return optionFunc(func(cfg *bootstarpServerConfig){
+	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.initKafkaDisabled = true
 	})
 }
 
 func EnableHttpHealthz() Option {
-	return optionFunc(func(cfg *bootstarpServerConfig){
+	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.enableHttpHealthz = true
 	})
 }
@@ -83,5 +86,18 @@ func EnableHttpHealthz() Option {
 func Middlewares(list []gin.HandlerFunc) Option {
 	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.middlewareList = list
+	})
+}
+
+// CustomSqlConf 设置自定义的 SQL 实例
+func CustomSqlConf(conf map[string]*data.SQLConfig) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.customSqlConf = conf
+	})
+}
+
+func CustomRedisConf(conf map[string]*data.RedisConfig) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.custonRedisConf = conf
 	})
 }

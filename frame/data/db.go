@@ -18,6 +18,12 @@ import (
 	"github.com/xbonlinenet/goup/frame/util"
 )
 
+type SQLConfig struct {
+	URL         string
+	MaxIdelConn int
+	MaxOpenConn int
+}
+
 const (
 	checkDBHostIPInterval = time.Second * 5
 )
@@ -33,8 +39,20 @@ var (
 var sqlMgr *SQLDBMgr
 
 // InitSQLMgr 初始化 sqlMgr
-func InitSQLMgr() {
-	sqlMgr = newSQLDBMgr(viper.Sub("data.mysql"))
+func InitSQLMgr(custom map[string]*SQLConfig) {
+	mysqlSection := viper.Sub("data.mysql")
+	for item := range mysqlSection.AllSettings() {
+		conf := mysqlSection.Sub(item)
+
+		config := &SQLConfig{
+			URL:         conf.GetString("url"),
+			MaxIdelConn: conf.GetInt("max-idle-conn"),
+			MaxOpenConn: conf.GetInt("max-open-conn"),
+		}
+
+		custom[item] = config
+	}
+	sqlMgr = newSQLDBMgr(custom)
 }
 
 // UnInitSQLMgr 反初始化 sqlMgr 相关
@@ -78,7 +96,7 @@ func (c *dbConn) Close() error {
 }
 
 // newSQLDBMgr 根据配置创建新的数据库连接管理
-func newSQLDBMgr(conf *viper.Viper) *SQLDBMgr {
+func newSQLDBMgr(conf map[string]*SQLConfig) *SQLDBMgr {
 	dbMgr := &SQLDBMgr{
 		connMap:  make(map[string]*dbConn),
 		mutex:    &sync.Mutex{},
@@ -95,14 +113,15 @@ func newSQLDBMgr(conf *viper.Viper) *SQLDBMgr {
 type SQLDBMgr struct {
 	connMap  map[string]*dbConn
 	mutex    *sync.Mutex
-	dbConfig *viper.Viper
+	dbConfig map[string]*SQLConfig
+	// dbConfig *viper.Viper
 	isClosed bool
 }
 
 // getDB 根据名称获取数据库连接
 func (mgr *SQLDBMgr) getDB(name string) (*gorm.DB, error) {
-	config := mgr.dbConfig.Sub(name)
-	if config == nil {
+	config, ok := mgr.dbConfig[name]
+	if !ok {
 		return nil, ErrSQLConfig
 	}
 
@@ -151,8 +170,8 @@ func (mgr *SQLDBMgr) updateDBConn(name string) error {
 		return errors.New("oldConn not found")
 	}
 
-	config := mgr.dbConfig.Sub(name)
-	if config == nil {
+	config, ok := mgr.dbConfig[name]
+	if !ok {
 		return ErrSQLConfig
 	}
 
@@ -214,9 +233,9 @@ func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
 	}
 }
 
-func initDB(config *viper.Viper, name string) (*gorm.DB, error) {
-	url := config.GetString("url")
-	db, err := gorm.Open("mysql", url)
+func initDB(config *SQLConfig, name string) (*gorm.DB, error) {
+
+	db, err := gorm.Open("mysql", config.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -224,24 +243,25 @@ func initDB(config *viper.Viper, name string) (*gorm.DB, error) {
 	db.LogMode(debug)
 
 	db.DB().SetConnMaxLifetime(2 * time.Hour)
-	maxIdleConn := config.GetInt("max-idle-conn")
-	if maxIdleConn != 0 {
-		db.DB().SetMaxIdleConns(maxIdleConn)
+	// maxIdleConn := config.GetInt("max-idle-conn")
+	if config.MaxIdelConn != 0 {
+		db.DB().SetMaxIdleConns(config.MaxIdelConn)
 	}
-	maxOpenConn := config.GetInt("max-open-conn")
-	if maxOpenConn != 0 {
-		db.DB().SetMaxOpenConns(maxOpenConn)
+	// maxOpenConn := config.GetInt("max-open-conn")
+	if config.MaxOpenConn != 0 {
+		db.DB().SetMaxOpenConns(config.MaxOpenConn)
 	}
 
 	if err := db.DB().Ping(); err != nil {
 		return db, err
 	}
-	log.Default().Info(fmt.Sprintf("%s DB: maxIdleConn:%d, maxOpenConn: %d", name, maxIdleConn, maxOpenConn))
+	log.Default().Info(fmt.Sprintf("%s DB: maxIdleConn:%d, maxOpenConn: %d",
+		name, config.MaxIdelConn, config.MaxOpenConn))
 	return db, nil
 }
 
-func initDBConn(config *viper.Viper, name string) (*dbConn, error) {
-	dbDSN := config.GetString("url")
+func initDBConn(config *SQLConfig, name string) (*dbConn, error) {
+	dbDSN := config.URL
 	dbCfg, err := mysql.ParseDSN(dbDSN)
 
 	if err != nil {
