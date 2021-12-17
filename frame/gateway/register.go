@@ -93,84 +93,99 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 		}
 	}
 
-	for i := 0; i < dto.NumField(); i++ {
-		field := dto.Field(i)
-		tag := field.Tag
-
-		if field.Anonymous {
-			info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
-			fields = append(fields, info.fields...)
-			types = append(types, info.types...)
-			continue
-
-		} else if field.Type.Kind() == reflect.Struct {
-			// 处理 Foo
-			info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
-			types = append(types, info.types...)
-
-		} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
-			// 处理 *Foo
-			fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
-			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
-			types = append(types, info.types...)
-
-		} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
-			// 处理 []Foo
-			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
-			types = append(types, info.types...)
-
-		} else if field.Type.Kind() == reflect.Slice &&
-			field.Type.Elem().Kind() == reflect.Ptr &&
-			field.Type.Elem().Elem().Kind() == reflect.Struct {
-			// 处理 []*Foo
-
-			info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
-			types = append(types, info.types...)
-
-		} else if field.Type.Kind() == reflect.Map &&
-			field.Type.Elem().Kind() == reflect.Struct {
-			// 处理 map[string]Foo
-
-			fmt.Printf("map type: %s\n", field.Type.Elem().String())
-
-			info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
-			types = append(types, info.types...)
-
-		} else if field.Type.Kind() == reflect.Map &&
-			field.Type.Elem().Kind() == reflect.Ptr &&
-			field.Type.Elem().Elem().Kind() == reflect.Struct {
-			// 处理 map[string]*Foo
-
-			info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
-			types = append(types, info.types...)
-		}
-
-		fieldName := ""
-		if tag.Get("json") == "" {
-			fieldName = strings.Split(tag.Get("form"), ",")[0]
-		} else {
-			fieldName = strings.Split(tag.Get("json"), ",")[0]
-		}
-
-
-		// 检查字段是否是必须的
-		var required bool
-		for _, i := range strings.Split(tag.Get("binding"), ",") {
-			if i == "required" {
-				required = true
-				break
-			}
-		}
+	if dto.Kind() == reflect.Slice && dto.Elem().Kind() == reflect.Struct {
+		// 处理 []Foo
+		info := getDTOFieldInfoImpl(dto.Elem(), true, foundTypes)
+		types = append(types, info.types...)
 
 		filedInfo := FieldInfo{
-			name:     fieldName,
-			desc:     tag.Get("desc"),
-			typ:      field.Type.String(),
-			required: required,
-			note:     "todo for binding",
+			name:     "no name, is a struct array",
+			desc:     "-",
+			typ:      dto.String(),
+			required: true,
+			note:     "-",
 		}
 
 		fields = append(fields, &filedInfo)
+	} else {
+		for i := 0; i < dto.NumField(); i++ {
+			field := dto.Field(i)
+			tag := field.Tag
+
+			if field.Anonymous {
+				info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
+				fields = append(fields, info.fields...)
+				types = append(types, info.types...)
+				continue
+
+			} else if field.Type.Kind() == reflect.Struct {
+				// 处理 Foo
+				info := getDTOFieldInfoImpl(field.Type, true, foundTypes)
+				types = append(types, info.types...)
+
+			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+				// 处理 *Foo
+				fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
+				info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
+				types = append(types, info.types...)
+
+			} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+				// 处理 []Foo
+				info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
+				types = append(types, info.types...)
+
+			} else if field.Type.Kind() == reflect.Slice &&
+				field.Type.Elem().Kind() == reflect.Ptr &&
+				field.Type.Elem().Elem().Kind() == reflect.Struct {
+				// 处理 []*Foo
+
+				info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
+				types = append(types, info.types...)
+
+			} else if field.Type.Kind() == reflect.Map &&
+				field.Type.Elem().Kind() == reflect.Struct {
+				// 处理 map[string]Foo
+
+				fmt.Printf("map type: %s\n", field.Type.Elem().String())
+
+				info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
+				types = append(types, info.types...)
+
+			} else if field.Type.Kind() == reflect.Map &&
+				field.Type.Elem().Kind() == reflect.Ptr &&
+				field.Type.Elem().Elem().Kind() == reflect.Struct {
+				// 处理 map[string]*Foo
+
+				info := getDTOFieldInfoImpl(field.Type.Elem().Elem(), true, foundTypes)
+				types = append(types, info.types...)
+			}
+
+			fieldName := ""
+			if tag.Get("json") == "" {
+				fieldName = strings.Split(tag.Get("form"), ",")[0]
+			} else {
+				fieldName = strings.Split(tag.Get("json"), ",")[0]
+			}
+
+			// 检查字段是否是必须的
+			var required bool
+			for _, i := range strings.Split(tag.Get("binding"), ",") {
+				if i == "required" {
+					required = true
+					break
+				}
+			}
+
+			filedInfo := FieldInfo{
+				name:     fieldName,
+				desc:     tag.Get("desc"),
+				typ:      field.Type.String(),
+				required: required,
+				note:     "todo for binding",
+			}
+
+			fields = append(fields, &filedInfo)
+		}
 	}
 
 	if sub {
