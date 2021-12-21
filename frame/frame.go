@@ -127,7 +127,10 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 
 // InitFramework 初始化框架
 func InitFramework() {
-	config := &bootstarpServerConfig{}
+	config := &bootstarpServerConfig{
+		customSqlConf:   make(map[string]*data.SQLConfig),
+		custonRedisConf: make(map[string]*data.RedisConfig),
+	}
 
 	initFrameWorkImpl(config)
 }
