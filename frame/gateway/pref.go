@@ -77,7 +77,7 @@ func WrapFunc(ctx *ApiContext, foo func()) {
 	foo()
 }
 
-func wrapRequest(foo func(c *gin.Context), c *gin.Context) {
+func wrapRequest(foo func(c *gin.Context, prefix string), c *gin.Context, apiPathPrefix string) {
 
 	reqId, reqLevel, err := getReqInfoFromHeader(c)
 	if err != nil {
@@ -112,7 +112,7 @@ func wrapRequest(foo func(c *gin.Context), c *gin.Context) {
 		recoredPoint(&endPoint)
 	}()
 
-	foo(c)
+	foo(c, apiPathPrefix)
 }
 
 func recoredPoint(point *perf.Point) {
