@@ -101,3 +101,9 @@ func CustomRedisConf(conf map[string]*data.RedisConfig) Option {
 		cfg.custonRedisConf = conf
 	})
 }
+
+func SpecifyApiPathPrefix(apiPrefix string) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.customApiPathPrefix = apiPrefix
+	})
+}

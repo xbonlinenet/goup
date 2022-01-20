@@ -52,7 +52,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	}
 
 	r.Use(recovery.Recovery())
-	r.Use(gateway.APIMiddleware())
+	r.Use(gateway.APIMiddleware(config.customApiPathPrefix))
 
 	if config.customRouter != nil {
 		config.customRouter(r)
@@ -114,6 +114,7 @@ type bootstarpServerConfig struct {
 	middlewareList    []gin.HandlerFunc
 	customSqlConf     map[string]*data.SQLConfig   // 自定义的 Mysql 配置
 	custonRedisConf   map[string]*data.RedisConfig // 自定义 Redis 配置
+	customApiPathPrefix string
 }
 
 var httpClient = &http.Client{

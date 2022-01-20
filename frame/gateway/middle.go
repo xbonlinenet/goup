@@ -24,6 +24,11 @@ var (
 	apiHandlerFuncMap = map[string]*HandlerInfo{}
 )
 
+const (
+	kDefaultApiPathPrefix = "/api/"
+	kAnyApiPathPrefixAllowed = "*"
+)
+
 func init() {
 	prometheus.MustRegister(requestLatency)
 	prometheus.MustRegister(invalidRequestCounter)
@@ -44,9 +49,22 @@ var invalidRequestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 }, []string{"path", "code"})
 
 // APIMiddleware 接口中间层
-func APIMiddleware() gin.HandlerFunc {
+func APIMiddleware(customApiPathPrefix string) gin.HandlerFunc {
+	if customApiPathPrefix == "" {
+		customApiPathPrefix = kDefaultApiPathPrefix
+	}else if customApiPathPrefix != kAnyApiPathPrefixAllowed {
+		// make sure customApiPathPrefix is like '/xxxx/'
+		if !strings.HasPrefix(customApiPathPrefix, "/"){
+			customApiPathPrefix = "/" + customApiPathPrefix
+		}
+		if !strings.HasSuffix(customApiPathPrefix, "/") {
+			customApiPathPrefix = customApiPathPrefix + "/"
+		}
+	}
+
 	return func(c *gin.Context) {
-		if i := strings.Index(c.Request.URL.Path, "/api/"); i == 0 {
+		if customApiPathPrefix == kAnyApiPathPrefixAllowed ||
+			strings.HasPrefix(c.Request.URL.Path, customApiPathPrefix) {
 			wrapRequest(handlerApiRequest, c)
 			// handlerApiRequest(c)
 		} else {
