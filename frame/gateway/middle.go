@@ -246,6 +246,9 @@ func getAPIKey(path string, apiPathPrefix string) string {
 	if apiPathPrefix != kAnyApiPathPrefixAllowed {
 		path = path[len(apiPathPrefix):]
 	}
-	api := strings.ReplaceAll(path, "/", ".")
-	return api
+	if strings.HasPrefix(path, "/") {
+		return strings.ReplaceAll(path[1:], "/", ".")
+	}else{
+		return strings.ReplaceAll(path, "/", ".")
+	}
 }
