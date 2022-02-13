@@ -2,6 +2,7 @@ package xrpc
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/xbonlinenet/goup/frame/alter"
@@ -47,10 +48,20 @@ func HttpPostWithJsonResp(apiUrl string, postParam interface{},  resp interface{
 	var reqBody []byte
 	var err error
 
-	if !reqOpts.ReqBodyFormEncoded {
+	if reqOpts.MarshalType == MarshalByJsonEncode {
 		reqBody, err = Json.Marshal(&postParam)
-	}else{
+	}else if reqOpts.MarshalType == MarshalByFormEncode{
 		reqBody, err = formEncodeParams(postParam)
+	}else if reqOpts.MarshalType == MarshalFromRawBytes {
+		if rawBody, ok := postParam.([]byte); !ok {
+			log.Default().Error("postParam(http body) is not type of []byte")
+			return errors.New("postParam(http body) is not type of []byte")
+		}else{
+			reqBody = rawBody
+		}
+	}else{
+		log.Default().Error("Unknown marshalType when try to encode http body", zap.Int("marshalType", reqOpts.MarshalType))
+		return errors.New("unknown marshalType when try to encode http body")
 	}
 	if err != nil {
 		log.Default().Sugar().Errorf("HttpPostWithJsonResp build http body error: %s", err.Error())

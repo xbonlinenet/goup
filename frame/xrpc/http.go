@@ -32,6 +32,10 @@ func init() {
 const (
 	DefaultTimeout = 10 * time.Second
 	HttpTimeoutLevel2 = 5 * time.Second
+
+	MarshalByJsonEncode = 0
+	MarshalByFormEncode = 1
+	MarshalFromRawBytes = 2
 )
 
 // RequestOptions 请求设置
@@ -42,9 +46,10 @@ type RequestOptions struct {
 	// Headers
 	Headers map[string]string
 
-	ReqBodyFormEncoded	bool
+	//ReqBodyFormEncoded	bool
 	Verbose bool
 	SlowAlertAllowed bool
+	MarshalType int
 }
 
 // options abs
@@ -86,7 +91,14 @@ func WithVerbose(verbose bool) RequestOption {
 
 func WithFormEncoded(formEncoded bool) RequestOption {
 	return ApplyOption(func(options *RequestOptions){
-		options.ReqBodyFormEncoded = formEncoded
+		// options.ReqBodyFormEncoded = formEncoded
+		options.MarshalType = MarshalByFormEncode
+	})
+}
+
+func WithRawBody(formEncoded bool) RequestOption {
+	return ApplyOption(func(options *RequestOptions){
+		options.MarshalType = MarshalFromRawBytes
 	})
 }
 
