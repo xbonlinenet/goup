@@ -120,7 +120,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	if err != nil {
 		fmt.Println("shutdown err: ", err)
 	}
-	fmt.Println("----exited----", time.Since(now))
+	fmt.Println("----exited-----", time.Since(now))
 
 }
 
