@@ -3,9 +3,13 @@ package frame
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -95,25 +99,45 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		addr = "0.0.0.0:8080"
 		log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
 	}
-	err := r.Run(addr)
-	util.CheckError(err)
-	log.Sugar().Errorf("Occur err: %s", err.Error())
+
+	server := &http.Server{
+		Addr:    addr,
+		Handler: r,
+	}
+
+	go server.ListenAndServe()
+
+	// 监听退出信号
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
+	sig := <-ch
+
+	fmt.Println("got a signal", sig)
+	now := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err := server.Shutdown(ctx)
+	if err != nil {
+		fmt.Println("shutdown err: ", err)
+	}
+	fmt.Println("----exited----", time.Since(now))
+
 }
 
 type bootstarpServerConfig struct {
-	beforeInit        func()
-	beforeServerRun   func()
-	customRouter      func(r *gin.Engine)
-	versionHandler    func(c *gin.Context)
-	reportApiDocAddr  string
-	initDbDisabled    bool
-	initRedisDisabled bool
-	initEsDisabled    bool
-	initKafkaDisabled bool
-	enableHttpHealthz bool
-	middlewareList    []gin.HandlerFunc
-	customSqlConf     map[string]*data.SQLConfig   // 自定义的 Mysql 配置
-	custonRedisConf   map[string]*data.RedisConfig // 自定义 Redis 配置
+	beforeInit          func()
+	beforeServerRun     func()
+	customRouter        func(r *gin.Engine)
+	versionHandler      func(c *gin.Context)
+	reportApiDocAddr    string
+	initDbDisabled      bool
+	initRedisDisabled   bool
+	initEsDisabled      bool
+	initKafkaDisabled   bool
+	enableHttpHealthz   bool
+	middlewareList      []gin.HandlerFunc
+	customSqlConf       map[string]*data.SQLConfig   // 自定义的 Mysql 配置
+	custonRedisConf     map[string]*data.RedisConfig // 自定义 Redis 配置
 	customApiPathPrefix string
 }
 
