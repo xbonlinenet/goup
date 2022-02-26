@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	kDefaultApiPathPrefix = "/api/"
+	kDefaultApiPathPrefix    = "/api/"
 	kAnyApiPathPrefixAllowed = "*"
 )
 
@@ -52,9 +52,9 @@ var invalidRequestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 func APIMiddleware(customApiPathPrefix string) gin.HandlerFunc {
 	if customApiPathPrefix == "" {
 		customApiPathPrefix = kDefaultApiPathPrefix
-	}else if customApiPathPrefix != kAnyApiPathPrefixAllowed {
+	} else if customApiPathPrefix != kAnyApiPathPrefixAllowed {
 		// make sure customApiPathPrefix is like '/xxxx/'
-		if !strings.HasPrefix(customApiPathPrefix, "/"){
+		if !strings.HasPrefix(customApiPathPrefix, "/") {
 			customApiPathPrefix = "/" + customApiPathPrefix
 		}
 		if !strings.HasSuffix(customApiPathPrefix, "/") {
@@ -201,12 +201,33 @@ func handlerApiRequest(c *gin.Context) {
 		for key, val := range apiContext.respHeaders {
 			c.Header(key, val)
 		}
-		if apiHandlerInfo.respType == XmlType {
+
+		switch apiHandlerInfo.respType {
+		case XmlType:
 			c.XML(200, response)
-		} else if apiHandlerInfo.respType == StringType {
+		case StringType:
 			c.String(200, "%v", response)
-		} else {
-			c.PureJSON(200, response)
+		case TextHtmlType:
+			respData, ok := response.([]byte)
+			if !ok {
+				panic("content-type is text/html,resp type must be []byte")
+			}
+			c.Data(200, "text/html; charset=utf-8", respData)
+		case OctetStreamType:
+			respData, ok := response.([]byte)
+			if !ok {
+				panic("content-type is application/octet-stream,resp type must be []byte")
+			}
+			c.Data(200, "application/octet-stream; charset=utf-8", respData)
+		case JsonStreamType:
+			respData, ok := response.([]byte)
+			if !ok {
+				panic("content-type is application/json,resp type must be []byte")
+			}
+			c.Data(200, "application/json; charset=utf-8", respData)
+		default:
+			c.PureJSON(200, response) // 默认是json，但是如果返回的是二进制的json串，此方法会编码成base64格式
+
 		}
 	}
 }
