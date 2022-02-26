@@ -48,6 +48,13 @@ func ResponseString() Option {
 	})
 }
 
+// RespContentType 指定响应类型，传入定义的常量
+func RespContentType(contentType respType) Option {
+	return optionFunc(func(handler *HandlerInfo) {
+		handler.respType = contentType
+	})
+}
+
 // ExtInfo 设置额外的说明信息
 func ExtInfo(info map[string]string) Option {
 	return optionFunc(func(handler *HandlerInfo) {
