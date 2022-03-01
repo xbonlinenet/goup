@@ -3,6 +3,7 @@ package gateway
 import (
 	"net/http"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -68,6 +69,7 @@ type ApiContext struct {
 
 	// response headers
 	respHeaders map[string]string `json:"-"`
+	m           sync.Mutex
 }
 
 func (c *ApiContext) WriteHeader(key, val string) {
@@ -156,4 +158,60 @@ type TypeInfo struct {
 type DTOInfo struct {
 	fields []*FieldInfo
 	types  []*TypeInfo
+}
+
+// ============== 以下方法实现golang的标准context接口 ============
+
+// Deadline  ...
+func (*ApiContext) Deadline() (deadline time.Time, ok bool) {
+	return
+}
+
+// Done 。。。
+func (*ApiContext) Done() <-chan struct{} {
+	return nil
+}
+
+// Err ...
+func (*ApiContext) Err() error {
+	return nil
+}
+
+// Value ...
+func (*ApiContext) Value(key interface{}) interface{} {
+	return nil
+}
+
+// =======================================================
+
+// GetReqId ...
+func (c *ApiContext) GetReqId() string {
+
+	return c.ReqId
+}
+
+// GetReqLevel ...
+func (c *ApiContext) GetReqLevel() int {
+
+	return c.ReqLevel
+}
+
+// GetClientIP ...
+func (c *ApiContext) GetClientIP() string {
+
+	return c.ClientIP
+}
+
+// SetKV ...
+func (c *ApiContext) SetKV(key string, value interface{}) {
+	c.m.Lock()
+	defer c.m.Unlock()
+	c.Keys[key] = value
+}
+
+// GetKV ...
+func (c *ApiContext) GetKV(key string) interface{} {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return c.Keys[key]
 }

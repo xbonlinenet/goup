@@ -16,6 +16,7 @@ import (
 
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
+	"github.com/xbonlinenet/goup/frame/perf"
 	"github.com/xbonlinenet/goup/frame/recovery"
 	"github.com/xbonlinenet/goup/frame/util"
 )
@@ -195,7 +196,7 @@ func handlerApiRequest(c *gin.Context) {
 		}
 
 		// access 日志处理
-		log.GetLogger("access").Info("api", zap.String("api", apiKey), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
+		log.GetLogger("access").Info("api", zap.String("reqId", reqId), zap.String("api", apiKey), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
 
 		// 写入 Header
 		for key, val := range apiContext.respHeaders {
@@ -260,6 +261,7 @@ func failHandler(c *gin.Context, status int, code int, message string) {
 		zap.String("url", c.Request.URL.String()),
 		zap.String("body", cast.ToString(body)),
 		zap.String("referer", c.Request.Referer()),
+		zap.String("reqId", cast.ToString(c.Keys[perf.ReqIdKey])),
 	)
 }
 
