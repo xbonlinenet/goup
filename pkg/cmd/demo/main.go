@@ -1,47 +1,36 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame"
-	"github.com/xbonlinenet/goup/frame/log"
-	"github.com/xbonlinenet/goup/frame/recovery"
-	"github.com/xbonlinenet/goup/frame/util"
-	"github.com/xbonlinenet/goup/frame/web"
-	ginprometheus "github.com/zsais/go-gin-prometheus"
+	"github.com/xbonlinenet/goup/frame/flags"
 )
 
-func main() {
-	frame.Bootstrap(run)
+func version(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"version":    flags.GitCommit,
+		"build_time": flags.BuildTime,
+		"build_env":  flags.BuildEnv,
+	})
 }
 
-func run() {
+func customRouter(r *gin.Engine) {
+	r.GET("hello", func(c *gin.Context) {
+		c.String(200, "Hello world!")
+	})
+}
 
-	go func() {
-		http.ListenAndServe("0.0.0.0:6060", nil)
-	}()
-
-	r := gin.New()
-	// add prometheus middlewares
-	p := ginprometheus.NewPrometheus("gin")
-	p.Use(r)
-
-	debug := viper.GetBool("application.debug")
-	if debug {
-		gin.SetMode("debug")
-	} else {
-		gin.SetMode("release")
-	}
-	r.Use(recovery.Recovery())
-	r.GET("/version", web.Version)
-	registerRouter(r.Group("api"))
-
-	addr := viper.GetString("server.addr")
-
-	err := r.Run(addr)
-	util.CheckError(err)
-	log.Sugar().Errorf("Occur err: %s", err.Error())
+func main() {
+	ctx := context.Background()
+	frame.BootstrapServer(
+		ctx,
+		frame.BeforeServerRun(registerRouter),
+		frame.Version(version),
+		frame.CustomRouter(customRouter),
+		frame.ReportApi("http://192.168.0.22:14000/api/doc/report"),
+	)
 }

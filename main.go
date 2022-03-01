@@ -95,6 +95,8 @@ func registerRouter() {
 	)
 	gateway.RegisterAPI("demo", "sleep", "Demo for sleep", demo.SleepHandler{})
 	gateway.RegisterAPI("demo", "doc", "Demo complex sturct", demo.DocHandler{})
+	gateway.RegisterAPI("demo", "reactHtml", "Demo test for react", demo.ReactHandler{},
+		gateway.RespContentType(gateway.TextHtmlType))
 }
 
 func demoPreHandler(c *gin.Context, ctx *gateway.ApiContext) *gateway.Resp {

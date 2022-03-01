@@ -122,7 +122,7 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 	var w zapcore.WriteSyncer
 	if !forceLogStdout {
 		w = zapcore.AddSync(log)
-	}else{
+	} else {
 		w = zapcore.AddSync(os.Stdout)
 	}
 	core := zapcore.NewCore(
@@ -133,4 +133,27 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 
 	logger := zap.New(core, zap.AddCaller())
 	return logger
+}
+
+// GetLogFields 传入key value对 key1，value1,key2，value2，key3，value3
+// key为string，value为任意的
+// length不是偶数的话，最后一个会被赋值为空
+func GetLogFields(keyValuePairs ...interface{}) []zap.Field {
+	length := len(keyValuePairs)
+	n := length / 2
+	fields := make([]zap.Field, 0, n)
+	for i := 1; i < length; i += 2 {
+		key := keyValuePairs[i-1]
+		value := keyValuePairs[i]
+
+		field := zap.Any(fmt.Sprint(key), value)
+		fields = append(fields, field)
+	}
+
+	if length%2 != 0 {
+		key := keyValuePairs[length-1]
+		fields = append(fields, zap.Any(fmt.Sprint(key), ""))
+	}
+
+	return fields
 }
