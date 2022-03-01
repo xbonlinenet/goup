@@ -107,3 +107,10 @@ func SpecifyApiPathPrefix(apiPrefix string) Option {
 		cfg.customApiPathPrefix = apiPrefix
 	})
 }
+
+// RegisterHook 注册hook函数，在服务优雅关闭之前执行
+func RegisterHook(f func()) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.Hook = f
+	})
+}
