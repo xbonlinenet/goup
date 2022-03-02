@@ -33,7 +33,7 @@ func main() {
 		frame.CustomRouter(customRouter),
 		frame.ReportApi("http://192.168.0.22:14000/api/doc/report"),
 		frame.CustomSqlConf(customSqlConf),
-		frame.RegisterHook(func() {
+		frame.BeforeServerExit(func() {
 			fmt.Println("it will be done before server shutdown")
 		}),
 	)

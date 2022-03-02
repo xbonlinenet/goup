@@ -108,9 +108,9 @@ func SpecifyApiPathPrefix(apiPrefix string) Option {
 	})
 }
 
-// RegisterHook 注册hook函数，在服务优雅关闭之前执行
-func RegisterHook(f func()) Option {
+// BeforeServerExit 注册hook函数，在服务优雅关闭之前执行
+func BeforeServerExit(f func()) Option {
 	return optionFunc(func(cfg *bootstarpServerConfig) {
-		cfg.Hook = f
+		cfg.BeforeServerExit = f
 	})
 }

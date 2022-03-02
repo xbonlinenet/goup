@@ -112,9 +112,9 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 	sig := <-ch
 	fmt.Println("got a signal", sig)
-	if config.Hook != nil {
+	if config.BeforeServerExit != nil {
 		fmt.Println("executing hook function，server will be soon shutdown after hook finish")
-		config.Hook() // 执行hook函数
+		config.BeforeServerExit() // 执行hook函数
 	}
 	now := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -142,7 +142,7 @@ type bootstarpServerConfig struct {
 	customSqlConf       map[string]*data.SQLConfig   // 自定义的 Mysql 配置
 	custonRedisConf     map[string]*data.RedisConfig // 自定义 Redis 配置
 	customApiPathPrefix string
-	Hook                func() // 注册hook函数，在服务优雅关闭之前执行
+	BeforeServerExit    func() // 注册hook函数，在服务优雅关闭之前执行
 }
 
 var httpClient = &http.Client{
