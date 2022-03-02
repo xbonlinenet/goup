@@ -107,3 +107,10 @@ func SpecifyApiPathPrefix(apiPrefix string) Option {
 		cfg.customApiPathPrefix = apiPrefix
 	})
 }
+
+// BeforeServerExit 注册hook函数，在服务优雅关闭之前执行
+func BeforeServerExit(f func()) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.beforeServerExit = f
+	})
+}
