@@ -18,6 +18,14 @@ import (
 )
 
 func HttpPostWithJsonResp(apiUrl string, postParam interface{},  resp interface{}, options ...RequestOption) error {
+	finalOptions := make([]RequestOption, 0, len(options)+1)
+	for _, option := range options {
+		finalOptions = append(finalOptions, option)
+	}
+	finalOptions = append(finalOptions, WithHttpMethod(http.MethodPost))
+
+	return HttpCallWithJsonResp(apiUrl, postParam, resp, finalOptions...)
+/*
 	start := time.Now()
 
 	reqOpts := RequestOptions{
@@ -68,7 +76,7 @@ func HttpPostWithJsonResp(apiUrl string, postParam interface{},  resp interface{
 		return err
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx,reqOpts.HttpMethod, apiUrl, bytes.NewBuffer(reqBody))
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", apiUrl, bytes.NewBuffer(reqBody))
 	if err != nil {
 		log.Default().Error("http.NewRequestWithContext() err", zap.Error(err),
 			zap.String("url", apiUrl), zap.String("req", string(reqBody)))
@@ -106,9 +114,18 @@ func HttpPostWithJsonResp(apiUrl string, postParam interface{},  resp interface{
 	}
 
 	return nil
+ */
 }
 
 func HttpGetWithJsonResp(apiUrl string, getParams map[string]interface{}, resp interface{}, options ...RequestOption) error {
+	finalOptions := make([]RequestOption, 0, len(options)+1)
+	for _, option := range options {
+		finalOptions = append(finalOptions, option)
+	}
+	finalOptions = append(finalOptions, WithHttpMethod(http.MethodGet))
+
+	return HttpCallWithJsonResp(apiUrl, getParams, resp, finalOptions...)
+/*	
 	start := time.Now()
 
 	reqOpts := RequestOptions{
@@ -174,6 +191,7 @@ func HttpGetWithJsonResp(apiUrl string, getParams map[string]interface{}, resp i
 	}
 
 	return nil
+ */
 }
 
 func formEncodeParams(postParam interface{}) ([]byte, error) {
