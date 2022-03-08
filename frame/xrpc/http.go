@@ -50,6 +50,7 @@ type RequestOptions struct {
 	Verbose bool
 	SlowAlertAllowed bool
 	MarshalType int
+	HttpMethod string
 }
 
 // options abs
@@ -96,10 +97,27 @@ func WithFormEncoded(formEncoded bool) RequestOption {
 	})
 }
 
-func WithRawBody(formEncoded bool) RequestOption {
+func WithRawBody() RequestOption {
 	return ApplyOption(func(options *RequestOptions){
 		options.MarshalType = MarshalFromRawBytes
 	})
+}
+
+func WithHttpMethod(method string) RequestOption {
+	return ApplyOption(func(options *RequestOptions){
+		if isValidHttpMethod(method) {
+			options.HttpMethod = method
+		}else{
+			options.HttpMethod = http.MethodPost // default value
+		}
+	})
+}
+
+func isValidHttpMethod(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead ||
+		method == http.MethodPost || method == http.MethodPut ||
+		method == http.MethodPatch || method == http.MethodDelete ||
+		method == http.MethodOptions || method == http.MethodTrace
 }
 
 var initHttClientOnce sync.Once
