@@ -41,3 +41,13 @@ func (c *ApiContext) Debug(msg string, fields ...zap.Field) {
 func (c *ApiContext) Debugf(format string, msg string, fields ...zap.Field) {
 	c.Debug(fmt.Sprintf(format, msg), fields...)
 }
+
+// Warn ...
+func (c *ApiContext) Warn(msg string, fields ...zap.Field) {
+	log.Default().With(c.buildTrace()...).Warn(msg, fields...)
+}
+
+// Warnf ...
+func (c *ApiContext) Warnf(format string, msg string, fields ...zap.Field) {
+	c.Warn(fmt.Sprintf(format, msg), fields...)
+}
