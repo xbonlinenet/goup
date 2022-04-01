@@ -244,3 +244,44 @@ func KafkaConsumeV2(signals chan os.Signal, topics []string, groupID string, err
 		}
 	}
 }
+
+// KafkaConsumeV3 带处理context停止信号的 kafka 消费
+func KafkaConsumeV3(ctx context.Context, topics []string, groupID string, errCallback func(err error),
+	callback func(msgBytes []byte), finishCallback func()) {
+	kafkaConsumer, err := NewConsumer(topics, groupID)
+	if err != nil {
+		panic(err)
+	}
+
+	defer kafkaConsumer.Close()
+
+	// consume errors
+	go func() {
+		for err := range kafkaConsumer.Errors() {
+			errCallback(err)
+		}
+	}()
+
+	// consume notifications
+	go func() {
+		for range kafkaConsumer.Notifications() {
+		}
+	}()
+
+	// consume messages, watch signals
+	for {
+		select {
+		case msg, ok := <-kafkaConsumer.Messages():
+			if !ok {
+				break
+			}
+
+			kafkaConsumer.MarkOffset(msg, "") // mark message as processed
+			callback(msg.Value)
+		case <-ctx.Done():
+			fmt.Println("stop starting....", ctx.Err())
+			finishCallback()
+			return
+		}
+	}
+}
