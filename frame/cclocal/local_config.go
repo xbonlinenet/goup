@@ -1,7 +1,7 @@
 package cclocal
 
 import (
-	jsoniter "github.com/json-iterator/go"
+	"encoding/json"
 	"github.com/spf13/cast"
 	"github.com/xbonlinenet/goup/frame/cc"
 	"github.com/xbonlinenet/goup/frame/log"
@@ -12,7 +12,6 @@ import (
 const (
 	kEtcConfigPath = "/etc/config"
 )
-
 
 func GetCurrentPath() (string, error) {
 	return cc.GetCurrentPath()
@@ -119,7 +118,7 @@ func GetRawString(module LocalConfigReader, key string, defaultValue string) str
 	if value == nil {
 		return defaultValue
 	}
-	data, err := jsoniter.Marshal(value)
+	data, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
@@ -136,9 +135,9 @@ func GetRaw(path string, defaultValue string) string {
 	return string(buf)
 }
 
-func ConvertStringToMapStruct(json string) map[string]interface{} {
+func ConvertStringToMapStruct(js string) map[string]interface{} {
 	var value map[string]interface{}
-	err := jsoniter.Unmarshal([]byte(json), &value)
+	err := json.Unmarshal([]byte(js), &value)
 	if err != nil {
 		panic(err)
 	}

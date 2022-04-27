@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -221,7 +222,7 @@ func ApiDetail(c *gin.Context) {
 		body = []byte(fmt.Sprintf("unsupport faker type: %s", err.Error()))
 		err = nil
 	} else {
-		body, err = Json.Marshal(&req)
+		body, err = json.Marshal(&req)
 
 	}
 	util.CheckError(err)

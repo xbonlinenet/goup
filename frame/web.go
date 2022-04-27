@@ -3,6 +3,7 @@ package frame
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -171,7 +172,7 @@ func reportApi(server string, port int64, reportAddr string) {
 		"apiList": apiList,
 	}
 
-	payload, err := gateway.Json.Marshal(&params)
+	payload, err := json.Marshal(&params)
 	util.CheckError(err)
 
 	resp, err := httpClient.Post(reportAddr, "application/json; encoding=utf-8", bytes.NewReader(payload))
