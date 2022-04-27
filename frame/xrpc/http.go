@@ -30,7 +30,7 @@ func init() {
 }
 
 const (
-	DefaultTimeout = 10 * time.Second
+	DefaultTimeout    = 10 * time.Second
 	HttpTimeoutLevel2 = 5 * time.Second
 )
 
@@ -42,9 +42,9 @@ type RequestOptions struct {
 	// Headers
 	Headers map[string]string
 
-	ReqBodyFormEncoded	bool
-	Verbose bool
-	SlowAlertAllowed bool
+	ReqBodyFormEncoded bool
+	Verbose            bool
+	SlowAlertAllowed   bool
 }
 
 // options abs
@@ -67,7 +67,7 @@ func WithHeaders(headers map[string]string) RequestOption {
 }
 
 func WithSlowAlert(alertAllowed bool) RequestOption {
-	return ApplyOption(func(options *RequestOptions){
+	return ApplyOption(func(options *RequestOptions) {
 		options.SlowAlertAllowed = alertAllowed
 	})
 }
@@ -85,7 +85,7 @@ func WithVerbose(verbose bool) RequestOption {
 }
 
 func WithFormEncoded(formEncoded bool) RequestOption {
-	return ApplyOption(func(options *RequestOptions){
+	return ApplyOption(func(options *RequestOptions) {
 		options.ReqBodyFormEncoded = formEncoded
 	})
 }

@@ -1,7 +1,7 @@
 package cclocal
 
 import (
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
 	"github.com/xbonlinenet/goup/frame/cc"
 	"github.com/xbonlinenet/goup/frame/log"
@@ -118,7 +118,7 @@ func GetRawString(module LocalConfigReader, key string, defaultValue string) str
 	if value == nil {
 		return defaultValue
 	}
-	data, err := json.Marshal(value)
+	data, err := jsoniter.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
@@ -135,9 +135,9 @@ func GetRaw(path string, defaultValue string) string {
 	return string(buf)
 }
 
-func ConvertStringToMapStruct(js string) map[string]interface{} {
+func ConvertStringToMapStruct(json string) map[string]interface{} {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(js), &value)
+	err := jsoniter.Unmarshal([]byte(json), &value)
 	if err != nil {
 		panic(err)
 	}
