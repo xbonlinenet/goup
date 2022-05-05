@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame/data"
@@ -85,6 +86,8 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 
 			reportApi(viper.GetString("application.name"), port, config.reportApiDocAddr)
 		}
+
+		pprof.Register(r)
 
 	} else {
 		gin.SetMode("release")
