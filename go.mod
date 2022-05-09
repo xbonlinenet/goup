@@ -14,6 +14,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gavv/httpexpect v2.0.0+incompatible
+	github.com/gin-contrib/pprof v1.3.0 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-errors/errors v1.1.1
 	github.com/go-redis/cache v6.4.0+incompatible
@@ -22,7 +23,7 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/imkira/go-interpol v1.1.0 // indirect
 	github.com/jinzhu/gorm v1.9.16
-	github.com/json-iterator/go v1.1.10
+	github.com/json-iterator/go v1.1.12
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/olivere/elastic/v7 v7.0.19
