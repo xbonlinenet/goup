@@ -196,7 +196,7 @@ func handlerApiRequest(c *gin.Context) {
 		}
 
 		// access 日志处理
-		log.GetLogger("access").Info("api", zap.String("reqId", reqId), zap.String("api", apiKey), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
+		log.GetLogger("access").Info("api", zap.String("reqId", reqId), zap.String("api", apiKey), zap.Int("useTime(ms)", int(time.Since(start).Milliseconds())), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
 
 		// 写入 Header
 		for key, val := range apiContext.respHeaders {
