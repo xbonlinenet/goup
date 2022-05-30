@@ -14,8 +14,8 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gavv/httpexpect v2.0.0+incompatible
-	github.com/gin-contrib/pprof v1.3.0 // indirect
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-contrib/pprof v1.3.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-errors/errors v1.1.1
 	github.com/go-redis/cache v6.4.0+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -35,7 +35,7 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/viper v1.7.1
-	github.com/valyala/fasthttp v1.16.0 // indirect
+	github.com/valyala/fasthttp v1.37.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	github.com/xbonlinenet/alter/lib v0.0.0-20210616095711-791fbaa6e35d
 	github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03
@@ -46,7 +46,7 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
-	golang.org/x/text v0.3.3
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	golang.org/x/text v0.3.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
