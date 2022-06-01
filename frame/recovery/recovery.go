@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
@@ -52,6 +53,8 @@ func RecoveryWithWriter() gin.HandlerFunc {
 				message := fmt.Sprintf("[Recovery] %s panic recovered:\n%s\n%s\n%s%s", TimeFormat(time.Now()), string(httprequest), err, stack, reset)
 				log.Default().Error(message)
 				alter.Notify(fmt.Sprintf("%s occur error.", c.Request.URL.Path), fmt.Sprintf("%s \n %s", err, string(stack)), c.Request.URL.Path)
+				sentry.CaptureMessage(message)
+
 				c.JSON(500, gin.H{
 					"code":    2,
 					"message": fmt.Errorf("%v", err),
