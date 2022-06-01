@@ -9,6 +9,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/go-errors/errors"
 	"github.com/spf13/viper"
 
@@ -122,6 +123,13 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 		}
 	} else {
 		cc.InitConfigCenter(zkServers)
+	}
+
+	// 初始化 sentry
+	if sentryDsn := viper.GetString("sentry.dsn"); sentryDsn != "" {
+		sentry.Init(sentry.ClientOptions{
+			Dsn: sentryDsn,
+		})
 	}
 }
 
