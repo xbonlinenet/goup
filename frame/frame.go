@@ -168,8 +168,8 @@ func UnInitFramework() {
 
 	if err := recover(); err != nil {
 		goErr := errors.Wrap(err, 0)
-
 		alter.NotifyError(goErr.Error(), goErr.Err)
+		sentry.CaptureException(goErr)
 		os.Exit(1)
 	}
 	cost := time.Now().Unix() - start
