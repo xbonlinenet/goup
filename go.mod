@@ -22,6 +22,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/json-iterator/go v1.1.12
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
+	github.com/lib/pq v1.10.6 // indirect
 	github.com/olivere/elastic/v7 v7.0.19
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0

@@ -87,7 +87,7 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 
 	callInitFuncByConfigCondition(func() {
 		data.InitSQLMgr(serverConfig.customSqlConf)
-	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.mysql")
+	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.db")
 
 	callInitFuncByConfigCondition(func() {
 		data.InitRedisMgr(serverConfig.custonRedisConf)
