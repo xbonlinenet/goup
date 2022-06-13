@@ -1,7 +1,9 @@
 package gateway
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -28,6 +30,7 @@ var (
 const (
 	kDefaultApiPathPrefix    = "/api/"
 	kAnyApiPathPrefixAllowed = "*"
+	MaxRespLen               = 512
 )
 
 func init() {
@@ -196,7 +199,7 @@ func handlerApiRequest(c *gin.Context) {
 		}
 
 		// access 日志处理
-		log.GetLogger("access").Info("api", zap.String("reqId", reqId), zap.String("api", apiKey), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
+		//log.GetLogger("access").Info("api", zap.String("reqId", reqId), zap.String("api", apiKey), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", response))
 
 		// 写入 Header
 		for key, val := range apiContext.respHeaders {
@@ -230,6 +233,10 @@ func handlerApiRequest(c *gin.Context) {
 			c.PureJSON(200, response) // 默认是json，但是如果返回的是二进制的json串，此方法会编码成base64格式
 
 		}
+		// access 日志处理
+		realResp := getRealResp(response)
+		log.GetLogger("access").Info("api", zap.String("reqId", reqId), zap.String("api", apiKey), zap.Int("useTime(ms)", int(time.Since(start).Milliseconds())), zap.Any("request", request), zap.Any("context", apiContext), zap.Any("Response", realResp))
+
 	}
 }
 
@@ -268,4 +275,39 @@ func failHandler(c *gin.Context, status int, code int, message string) {
 func getAPIKey(path string) string {
 	api := strings.ReplaceAll(path[5:], "/", ".")
 	return api
+}
+
+// getRealResp 简单的处理下返回的长度，响应数据量太大，日志过大刷屏
+func getRealResp(resp interface{}) interface{} {
+	showResp := viper.GetString("application.show_resp")
+	switch showResp {
+	case "all":
+		return resp
+	case "close":
+		return ""
+	}
+
+	v := reflect.ValueOf(resp)
+	if v.Kind() == reflect.Ptr {
+		v = reflect.ValueOf(resp).Elem()
+	}
+
+	var result interface{}
+	switch v.Kind() {
+	case reflect.String:
+		res := v.String()
+		result = res
+		if len(res) > MaxRespLen {
+			result = res[:MaxRespLen] + "..."
+		}
+	default:
+		b, _ := json.Marshal(resp)
+		str := string(b)
+		result = str
+		if len(str) > MaxRespLen {
+			result = str[:MaxRespLen] + "..."
+		}
+	}
+
+	return result
 }
