@@ -13,7 +13,6 @@ const (
 	kEtcConfigPath = "/etc/config"
 )
 
-
 func GetCurrentPath() (string, error) {
 	return cc.GetCurrentPath()
 }

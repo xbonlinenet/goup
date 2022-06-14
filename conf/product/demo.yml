@@ -33,7 +33,7 @@ log:
       maxbackups: 10
       compress: true
     interval: 1h
-    level: info
+    level: debug
   access:
     logger:
       filename: log/access.log
@@ -42,7 +42,7 @@ log:
       maxbackups: 10
       compress: true
     interval: 1h
-    level: info
+    level: debug
   access_error:
     logger:
       filename: log/access_error.log
@@ -51,4 +51,4 @@ log:
       maxbackups: 10
       compress: true
     interval: 1h
-    level: info    
+    level: debug    

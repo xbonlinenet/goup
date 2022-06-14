@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"encoding/json"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -125,7 +126,7 @@ func recoredPoint(point *perf.Point) {
 
 	producer := data.MustGetAsyncProducer()
 
-	data, err := Json.Marshal(point)
+	data, err := json.Marshal(point)
 	util.CheckError(err)
 	producer.Input() <- &sarama.ProducerMessage{
 		Topic: perf.TraceKafkaTopic,

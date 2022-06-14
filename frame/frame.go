@@ -9,6 +9,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/go-errors/errors"
 	"github.com/spf13/viper"
 
@@ -86,7 +87,7 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 
 	callInitFuncByConfigCondition(func() {
 		data.InitSQLMgr(serverConfig.customSqlConf)
-	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.mysql")
+	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.db")
 
 	callInitFuncByConfigCondition(func() {
 		data.InitRedisMgr(serverConfig.custonRedisConf)
@@ -122,6 +123,13 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 		}
 	} else {
 		cc.InitConfigCenter(zkServers)
+	}
+
+	// 初始化 sentry
+	if sentryDsn := viper.GetString("sentry.dsn"); sentryDsn != "" {
+		sentry.Init(sentry.ClientOptions{
+			Dsn: sentryDsn,
+		})
 	}
 }
 
@@ -160,8 +168,8 @@ func UnInitFramework() {
 
 	if err := recover(); err != nil {
 		goErr := errors.Wrap(err, 0)
-
 		alter.NotifyError(goErr.Error(), goErr.Err)
+		sentry.CaptureException(goErr)
 		os.Exit(1)
 	}
 	cost := time.Now().Unix() - start

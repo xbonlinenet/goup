@@ -29,15 +29,31 @@ func GetCurrentPath() (string, error) {
 }
 
 func InitConfigCenter(servers []string) {
+	// 通过环境变量获取本地缓存目录
+	localCacheDir := os.Getenv(EnvKeyLocalCacheDir)
+	if localCacheDir != "" {
+		// 检查本地缓存目录是否存在与合法性
+		stat, err := os.Stat(localCacheDir)
+		if err != nil {
+			panic("check local cache dir error")
+		}
 
-	path, err := GetCurrentPath()
-	if err != nil {
-		path = "../config_cache"
-	} else {
-		path = filepath.Join(path, "config_cache")
+		if !stat.IsDir() {
+			panic("local cache dir is not dir")
+		}
 	}
 
-	center = go_config_center.NewConfigCenter("", servers, path, "json")
+	if localCacheDir == "" {
+		// 没有指定本地缓存目录的时候，使用默认的本地缓存目录
+		currentPath, err := GetCurrentPath()
+		if err != nil {
+			localCacheDir = "../config_cache"
+		} else {
+			localCacheDir = filepath.Join(currentPath, "config_cache")
+		}
+	}
+
+	center = go_config_center.NewConfigCenter("", servers, localCacheDir, "json")
 }
 
 func UnInitConfigCenter() {
