@@ -87,6 +87,7 @@ func registerRouter() {
 	)
 	gateway.RegisterAPI("demo", "redis", "Demo for reids incr", demo.RedisHandler{}, gateway.ExtInfo(map[string]string{"test": "<a href='https://www.null.com'>test</a>"}))
 	gateway.RegisterAPI("demo", "mysql", "Demo for mysql ", demo.MysqlHandler{})
+	gateway.RegisterAPI("demo", "postgres", "Demo for postgres ", demo.PostgresHandler{})
 	gateway.RegisterAPI("demo", "config", "Demo for config center ", demo.ConfigHandler{})
 	gateway.RegisterAPI("demo", "pre", "Demo for pre handler, normally used in login filter",
 		demo.PreHandler{},
@@ -98,8 +99,7 @@ func registerRouter() {
 	)
 	gateway.RegisterAPI("demo", "sleep", "Demo for sleep", demo.SleepHandler{})
 	gateway.RegisterAPI("demo", "doc", "Demo complex sturct", demo.DocHandler{})
-	gateway.RegisterAPI("demo", "reactHtml", "Demo test for react", demo.ReactHandler{},
-		gateway.RespContentType(gateway.TextHtmlType))
+	gateway.RegisterAPI("demo", "reactHtml", "Demo test for react", demo.ReactHandler{})
 }
 
 func demoPreHandler(c *gin.Context, ctx *gateway.ApiContext) *gateway.Resp {

@@ -5,20 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/go-sql-driver/mysql" // apply mysql driver
 	"github.com/jinzhu/gorm"
+	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
-
 	"github.com/xbonlinenet/goup/frame/log"
 	"github.com/xbonlinenet/goup/frame/util"
+	"go.uber.org/zap"
+)
+
+const (
+	DBTypeMySQL    = "mysql"
+	DBTypePostgres = "postgres"
 )
 
 type SQLConfig struct {
+	Type        string
 	URL         string
 	MaxIdelConn int
 	MaxOpenConn int
@@ -34,17 +41,30 @@ var (
 
 	// ErrSQLNotInited 还未初始化
 	ErrSQLNotInited = errors.New("sql not inited")
+
+	// ErrSQLUnknowType 位置类型数据库
+	ErrSQLUnknowType = errors.New("sql server type is unknown")
 )
 
 var sqlMgr *SQLDBMgr
 
 // InitSQLMgr 初始化 sqlMgr
 func InitSQLMgr(custom map[string]*SQLConfig) {
-	mysqlSection := viper.Sub("data.mysql")
-	for item := range mysqlSection.AllSettings() {
-		conf := mysqlSection.Sub(item)
+	dbSection := viper.Sub("data.db")
+	for item := range dbSection.AllSettings() {
+		conf := dbSection.Sub(item)
 
+		cType := conf.GetString("type")
+		if cType != "" && !util.StringArrayContains([]string{DBTypeMySQL, DBTypePostgres}, cType) {
+			panic(ErrSQLUnknowType)
+		}
+
+		dbType := DBTypeMySQL // 如果没有配置, 默认是 mysql, 兼容旧版本
+		if cType == DBTypePostgres {
+			dbType = DBTypePostgres
+		}
 		config := &SQLConfig{
+			Type:        dbType,
 			URL:         conf.GetString("url"),
 			MaxIdelConn: conf.GetInt("max-idle-conn"),
 			MaxOpenConn: conf.GetInt("max-open-conn"),
@@ -83,7 +103,7 @@ func MustGetDB(name string) *gorm.DB {
 
 type dbConn struct {
 	DB     *gorm.DB
-	Cfg    *mysql.Config
+	Addr   string
 	AddrIP net.IP
 }
 
@@ -209,9 +229,9 @@ func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
 
 		// iter over connections and check ip
 		for dbName, dbConn := range mgr.connMap {
-			addrIP, err := lookupAddrIP(dbConn.Cfg.Addr)
+			addrIP, err := lookupAddrIP(dbConn.Addr)
 			if err != nil {
-				log.Default().Error("LookupIPErr", zap.String("Addr", dbConn.Cfg.Addr), zap.Error(err))
+				log.Default().Error("LookupIPErr", zap.String("Addr", dbConn.Addr), zap.Error(err))
 				continue
 			}
 
@@ -234,7 +254,17 @@ func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
 }
 
 func initDB(config *SQLConfig, name string) (*gorm.DB, error) {
+	switch config.Type {
+	case DBTypeMySQL:
+		return initMySQL(config, name)
+	case DBTypePostgres:
+		return initPostgres(config, name)
+	default:
+		panic(false)
+	}
+}
 
+func initMySQL(config *SQLConfig, name string) (*gorm.DB, error) {
 	db, err := gorm.Open("mysql", config.URL)
 	if err != nil {
 		return nil, err
@@ -243,11 +273,34 @@ func initDB(config *SQLConfig, name string) (*gorm.DB, error) {
 	db.LogMode(debug)
 
 	db.DB().SetConnMaxLifetime(2 * time.Hour)
-	// maxIdleConn := config.GetInt("max-idle-conn")
 	if config.MaxIdelConn != 0 {
 		db.DB().SetMaxIdleConns(config.MaxIdelConn)
 	}
-	// maxOpenConn := config.GetInt("max-open-conn")
+	if config.MaxOpenConn != 0 {
+		db.DB().SetMaxOpenConns(config.MaxOpenConn)
+	}
+
+	if err := db.DB().Ping(); err != nil {
+		return db, err
+	}
+	log.Default().Info(fmt.Sprintf("%s DB: maxIdleConn:%d, maxOpenConn: %d",
+		name, config.MaxIdelConn, config.MaxOpenConn))
+	return db, nil
+}
+
+func initPostgres(config *SQLConfig, name string) (*gorm.DB, error) {
+	db, err := gorm.Open("postgres", config.URL)
+	if err != nil {
+		return nil, err
+	}
+	debug := viper.GetBool("application.debug")
+	db.LogMode(debug)
+
+	db.DB().SetConnMaxLifetime(2 * time.Hour)
+	if config.MaxIdelConn != 0 {
+		db.DB().SetMaxIdleConns(config.MaxIdelConn)
+	}
+
 	if config.MaxOpenConn != 0 {
 		db.DB().SetMaxOpenConns(config.MaxOpenConn)
 	}
@@ -262,13 +315,24 @@ func initDB(config *SQLConfig, name string) (*gorm.DB, error) {
 
 func initDBConn(config *SQLConfig, name string) (*dbConn, error) {
 	dbDSN := config.URL
-	dbCfg, err := mysql.ParseDSN(dbDSN)
 
-	if err != nil {
-		return nil, err
+	addr := ""
+	if config.Type == DBTypeMySQL {
+		dbCfg, err := mysql.ParseDSN(dbDSN)
+
+		if err != nil {
+			return nil, err
+		}
+		addr = dbCfg.Addr
+	} else if config.Type == DBTypePostgres {
+		dbCfg, err := url.Parse(dbDSN)
+		if err != nil {
+			return nil, err
+		}
+		addr = dbCfg.Host
 	}
 
-	addrIP, err := lookupAddrIP(dbCfg.Addr)
+	addrIP, err := lookupAddrIP(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +344,7 @@ func initDBConn(config *SQLConfig, name string) (*dbConn, error) {
 
 	conn := &dbConn{
 		DB:     db,
-		Cfg:    dbCfg,
+		Addr:   addr,
 		AddrIP: addrIP,
 	}
 

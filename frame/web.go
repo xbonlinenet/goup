@@ -3,6 +3,7 @@ package frame
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame/data"
@@ -84,6 +86,8 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 
 			reportApi(viper.GetString("application.name"), port, config.reportApiDocAddr)
 		}
+
+		pprof.Register(r)
 
 	} else {
 		gin.SetMode("release")
@@ -171,7 +175,7 @@ func reportApi(server string, port int64, reportAddr string) {
 		"apiList": apiList,
 	}
 
-	payload, err := gateway.Json.Marshal(&params)
+	payload, err := json.Marshal(&params)
 	util.CheckError(err)
 
 	resp, err := httpClient.Post(reportAddr, "application/json; encoding=utf-8", bytes.NewReader(payload))
