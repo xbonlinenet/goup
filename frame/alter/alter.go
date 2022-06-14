@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/spf13/viper"
 
 	"github.com/go-errors/errors"
@@ -37,6 +38,14 @@ func InitAlter() {
 // Notify 通知异常错误
 func Notify(message string, detail string, errorID string) {
 	client.Alter(message, detail, errorID)
+
+	// sentry 通知
+	if viper.GetString("sentry.dsn") != "" {
+		var evt = sentry.NewEvent()
+		evt.Level = sentry.LevelError
+		evt.Message = fmt.Sprintf("%s\nErrorId: %s\nDetail:\n%s", message, errorID, detail)
+		sentry.CaptureEvent(evt)
+	}
 }
 
 // NotifyError 通知错误
@@ -51,5 +60,5 @@ func NotifyError(message string, err error) {
 	errorID := util.CalcMD5(errorStr)
 	log.Default().Info(fmt.Sprintf("Occur error: %s", message))
 	log.Default().Info(fmt.Sprintf("strack: %s", sb.String()))
-	client.Alter(message, sb.String(), errorID)
+	Notify(message, sb.String(), errorID)
 }
