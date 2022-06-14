@@ -3,14 +3,14 @@ package gateway
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/getsentry/sentry-go"
+	"github.com/spf13/viper"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/prometheus/client_golang/prometheus"
