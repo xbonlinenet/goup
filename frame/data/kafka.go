@@ -31,6 +31,21 @@ func NewConsumer(topics []string, groupID string) (*cluster.Consumer, error) {
 	config.Group.Return.Notifications = true
 	config.ChannelBufferSize = 1024
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	/*
+		20220614:
+		解决:
+			panic: non-positive interval for NewTicker
+			goroutine 187 [running]:
+			time.NewTicker(0x0, 0x0)
+				/usr/local/go/src/time/tick.go:24 +0x151
+			github.com/bsm/sarama-cluster.(*Consumer).cmLoop(0xc0001060f0, 0xc00036ede0)
+				/root/go/pkg/mod/github.com/bsm/sarama-cluster@v2.1.15+incompatible/consumer.go:452 +0x5a
+			github.com/bsm/sarama-cluster.(*loopTomb).Go.func1(0xc0004f4f00, 0xc00015c160)
+				/root/go/pkg/mod/github.com/bsm/sarama-cluster@v2.1.15+incompatible/util.go:73 +0x7b
+			created by github.com/bsm/sarama-cluster.(*loopTomb).Go
+				/root/go/pkg/mod/github.com/bsm/sarama-cluster@v2.1.15+incompatible/util.go:69 +0x66
+	*/
+	config.Consumer.Offsets.CommitInterval = time.Second
 
 	brokers := viper.GetStringSlice("data.kafka.brokers")
 	if len(brokers) == 0 {
