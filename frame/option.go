@@ -114,3 +114,10 @@ func BeforeServerExit(f func()) Option {
 		cfg.beforeServerExit = f
 	})
 }
+
+// AfterServerExit 注册 hook 函数, 在服务退出之后执行
+func AfterServerExit(f func()) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.afterServerExit = f
+	})
+}

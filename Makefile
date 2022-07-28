@@ -26,7 +26,7 @@ build: init
 	python built/go/env_check.py 1.12
 	$(call init_app,${module})
 	$(call generate_sbin,${module})
-	go build -tags jsoniter -ldflags ${ldflags} -i -o ${OUTPUT}/${module}/bin/${module}-$(DATE) ./pkg/cmd/${module}
+	go build -tags jsoniter -ldflags ${ldflags} -o ${OUTPUT}/${module}/bin/${module}-$(DATE) ./pkg/cmd/${module}
 ifeq ($(httptest),1)
 	go test -c -o ${OUTPUT}/${module}/bin/httptest ./pkg/cmd/${module}/httptest
 endif

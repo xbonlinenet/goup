@@ -127,8 +127,11 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	if err != nil {
 		fmt.Println("shutdown err: ", err)
 	}
+	if config.afterServerExit != nil {
+		fmt.Println("executing hook function，server has shutdown.")
+		config.afterServerExit()
+	}
 	fmt.Println("----exited-----", time.Since(now))
-
 }
 
 type bootstarpServerConfig struct {
@@ -147,6 +150,7 @@ type bootstarpServerConfig struct {
 	custonRedisConf     map[string]*data.RedisConfig // 自定义 Redis 配置
 	customApiPathPrefix string
 	beforeServerExit    func() // 注册hook函数，在服务优雅关闭之前执行
+	afterServerExit     func()
 }
 
 var httpClient = &http.Client{
