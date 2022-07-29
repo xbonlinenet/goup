@@ -77,7 +77,8 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 	if len(includes) > 0 {
 		loadIncludeConfigFiles(includes, dir)
 	}
-	log.Init()
+	err = log.Init()
+	util.CheckError(err)
 
 	v, _ := json.Marshal(viper.AllSettings())
 
