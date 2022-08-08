@@ -65,6 +65,9 @@ function start(){
     DDD=`/bin/date +%Y-%m-%d--%H:%M:%S`
     mkdir -p ../log_backup/log_${DDD}
     mv ../log/std* ../log_backup/log_${DDD}/
+
+    find ../log_backup/ -maxdepth 1 -type d -mtime +7|xargs rm -rf {}
+
     cd ../bin
     `nohup ${STARTPROG} 1>../log/stdout.log 2>../log/stderr.log &` && success || failure
     echo
