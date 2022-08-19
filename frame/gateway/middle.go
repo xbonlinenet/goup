@@ -70,7 +70,7 @@ func APIMiddleware(customApiPathPrefix string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if customApiPathPrefix == kAnyApiPathPrefixAllowed ||
 			strings.HasPrefix(c.Request.URL.Path, customApiPathPrefix) {
-			wrapRequest(handlerApiRequest, c)
+			wrapRequest(handlerApiRequest, c, customApiPathPrefix)
 			// handlerApiRequest(c)
 		} else {
 			c.Next()
@@ -83,7 +83,7 @@ func abs(n int64) int64 {
 	return (n ^ y) - y
 }
 
-func handlerApiRequest(c *gin.Context) {
+func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 
 	start := time.Now()
 
@@ -98,7 +98,7 @@ func handlerApiRequest(c *gin.Context) {
 	}()
 
 	// 判断是否有路由可以处理
-	apiKey := getAPIKey(c.Request.URL.Path)
+	apiKey := getAPIKey(c.Request.URL.Path, apiPathPrefix)
 	apiHandlerInfo, ok := apiHandlerFuncMap[apiKey]
 	if !ok {
 		c.Next()
@@ -273,9 +273,15 @@ func failHandler(c *gin.Context, status int, code int, message string) {
 	)
 }
 
-func getAPIKey(path string) string {
-	api := strings.ReplaceAll(path[5:], "/", ".")
-	return api
+func getAPIKey(path string, apiPathPrefix string) string {
+	if apiPathPrefix != kAnyApiPathPrefixAllowed {
+		path = path[len(apiPathPrefix):]
+	}
+	if strings.HasPrefix(path, "/") {
+		return strings.ReplaceAll(path[1:], "/", ".")
+	} else {
+		return strings.ReplaceAll(path, "/", ".")
+	}
 }
 
 // getRealResp 简单的处理下返回的长度，响应数据量太大，日志过大刷屏
