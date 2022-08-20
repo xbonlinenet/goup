@@ -157,3 +157,17 @@ func IsRunningInDockerContainer() bool {
 
 	return false
 }
+
+// IsStringArrayEqual 判断两个字符串数组原始是否相同
+// 想个
+func IsStringArrayEqual(sorteda, sortedb []string) bool {
+	if len(sorteda) != len(sortedb) {
+		return false
+	}
+	for i, v := range sorteda {
+		if v != sortedb[i] {
+			return false
+		}
+	}
+	return true
+}

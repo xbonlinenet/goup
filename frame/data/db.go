@@ -1,11 +1,11 @@
 package data
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -104,7 +104,7 @@ func MustGetDB(name string) *gorm.DB {
 type dbConn struct {
 	DB     *gorm.DB
 	Addr   string
-	AddrIP net.IP
+	AddrIP []string
 }
 
 func (c *dbConn) Close() error {
@@ -114,6 +114,7 @@ func (c *dbConn) Close() error {
 		for i := 0; i < 30; i++ {
 			time.Sleep(time.Second)
 			if c.DB.DB().Stats().InUse <= 0 {
+				log.Default().Info("close db", zap.String("addr", c.Addr))
 				return c.DB.Close()
 			}
 		}
@@ -218,8 +219,8 @@ func (mgr *SQLDBMgr) updateDBConn(name string) error {
 		log.Default().Info(
 			"updateDBConn",
 			zap.String("name", name),
-			zap.String("old_ip", oldConn.AddrIP.String()),
-			zap.String("new_ip", newConn.AddrIP.String()),
+			zap.Strings("old_ip", oldConn.AddrIP),
+			zap.Strings("new_ip", newConn.AddrIP),
 		)
 	}
 
@@ -247,7 +248,10 @@ func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
 			}
 
 			// compare to current conn ip
-			if !bytes.Equal(dbConn.AddrIP, addrIP) {
+
+			// if !bytes.Equal(dbConn.AddrIP, addrIP) {
+
+			if !util.IsStringArrayEqual(dbConn.AddrIP, addrIP) {
 				waitUpdate = append(waitUpdate, dbName)
 			}
 		}
@@ -362,7 +366,7 @@ func initDBConn(config *SQLConfig, name string) (*dbConn, error) {
 	return conn, nil
 }
 
-func lookupAddrIP(addr string) ([]byte, error) {
+func lookupAddrIP(addr string) ([]string, error) {
 
 	// parse host from addr
 	addrSplits := strings.Split(addr, ":")
@@ -378,5 +382,12 @@ func lookupAddrIP(addr string) ([]byte, error) {
 		return nil, errors.New("no IP")
 	}
 
-	return addrIPs[0], nil
+	addrs := make([]string, 0, len(addrIPs))
+	for _, ip := range addrIPs {
+		addrs = append(addrs, string(ip))
+	}
+
+	sort.Strings(addrs)
+
+	return addrs, nil
 }
