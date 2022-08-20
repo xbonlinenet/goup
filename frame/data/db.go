@@ -109,6 +109,17 @@ type dbConn struct {
 
 func (c *dbConn) Close() error {
 	if c.DB != nil {
+
+		// Wait for 30s and close old conn
+		for i := 0; i < 30; i++ {
+			time.Sleep(time.Second)
+			if c.DB.DB().Stats().InUse <= 0 {
+				return c.DB.Close()
+			}
+		}
+		log.Default().Warn("close db when connect in use",
+			zap.Int("in use", c.DB.DB().Stats().InUse),
+			zap.String("addr", c.Addr))
 		return c.DB.Close()
 	}
 
