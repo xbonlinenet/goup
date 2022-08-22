@@ -280,11 +280,13 @@ func initDB(config *SQLConfig, name string) (*gorm.DB, error) {
 }
 
 func initMySQL(config *SQLConfig, name string) (*gorm.DB, error) {
+
 	db, err := gorm.Open("mysql", config.URL)
 	if err != nil {
 		return nil, err
 	}
 	debug := viper.GetBool("application.debug")
+	db.SetLogger(NewWriter())
 	db.LogMode(debug)
 
 	db.DB().SetConnMaxLifetime(2 * time.Hour)
@@ -309,6 +311,7 @@ func initPostgres(config *SQLConfig, name string) (*gorm.DB, error) {
 		return nil, err
 	}
 	debug := viper.GetBool("application.debug")
+	db.SetLogger(NewWriter())
 	db.LogMode(debug)
 
 	db.DB().SetConnMaxLifetime(2 * time.Hour)
