@@ -36,6 +36,7 @@ log:
       compress: true
     interval: 1h
     level: info
+    console: false
   access:
     logger:
       filename: log/access.log

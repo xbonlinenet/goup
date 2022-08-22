@@ -21,6 +21,7 @@ var (
 type Conf struct {
 	Interval time.Duration
 	Level    string
+	Console  bool
 	Logger   lumberjack.Logger
 }
 
@@ -87,8 +88,46 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 		}
 	}()
 
+	zapLevle := transformLevel(conf.Level)
+
+	encoder := zapcore.EncoderConfig{
+		// Keys can be anything except the empty string.
+		TimeKey:        "T",
+		LevelKey:       "L",
+		NameKey:        "N",
+		CallerKey:      "C",
+		MessageKey:     "M",
+		StacktraceKey:  "S",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.FullCallerEncoder,
+	}
+
+	var fileWriter zapcore.WriteSyncer
+	if !forceLogStdout {
+		if conf.Console {
+			fileWriter = zapcore.NewMultiWriteSyncer(zapcore.AddSync(log), os.Stdout)
+		} else {
+			fileWriter = zapcore.AddSync(log)
+		}
+	} else {
+		fileWriter = zapcore.AddSync(os.Stdout)
+	}
+	core := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoder),
+		fileWriter,
+		zapLevle,
+	)
+
+	logger := zap.New(core, zap.AddCallerSkip(1))
+	return logger
+}
+
+func transformLevel(level string) zapcore.Level {
 	zapLevle := zapcore.InfoLevel
-	l := strings.ToLower(conf.Level)
+	l := strings.ToLower(level)
 	switch l {
 	case "debug":
 		zapLevle = zapcore.DebugLevel
@@ -103,36 +142,7 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 	case "fatal":
 		zapLevle = zapcore.FatalLevel
 	}
-
-	encoder := zapcore.EncoderConfig{
-		// Keys can be anything except the empty string.
-		TimeKey:        "T",
-		LevelKey:       "L",
-		NameKey:        "N",
-		CallerKey:      "C",
-		MessageKey:     "M",
-		StacktraceKey:  "S",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.StringDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-
-	var w zapcore.WriteSyncer
-	if !forceLogStdout {
-		w = zapcore.AddSync(log)
-	} else {
-		w = zapcore.AddSync(os.Stdout)
-	}
-	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(encoder),
-		w,
-		zapLevle,
-	)
-
-	logger := zap.New(core, zap.AddCaller())
-	return logger
+	return zapLevle
 }
 
 // GetLogFields 传入key value对 key1，value1,key2，value2，key3，value3
