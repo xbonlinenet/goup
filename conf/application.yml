@@ -27,6 +27,16 @@ cache:
 
 
 log:
+  default:
+    logger:
+      filename: log/default.log
+      maxsize: 100
+      maxage: 7
+      maxbackups: 10
+      compress: true
+    interval: 1h
+    level: info
+    console: true
   error:
     logger:
       filename: log/error.log

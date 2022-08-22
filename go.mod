@@ -38,7 +38,7 @@ require (
 	github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
-	go.uber.org/zap v1.15.0
+	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
 	golang.org/x/text v0.3.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
