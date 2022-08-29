@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net"
@@ -32,7 +33,8 @@ type SQLConfig struct {
 }
 
 const (
-	checkDBHostIPInterval = time.Second * 5
+	checkDBHostIPInterval    = time.Second * 5
+	monitorDbMetricsInterval = time.Second * 15
 )
 
 var (
@@ -130,22 +132,27 @@ func (c *dbConn) Close() error {
 // newSQLDBMgr 根据配置创建新的数据库连接管理
 func newSQLDBMgr(conf map[string]*SQLConfig) *SQLDBMgr {
 	dbMgr := &SQLDBMgr{
-		connMap:  make(map[string]*dbConn),
-		mutex:    &sync.Mutex{},
-		dbConfig: conf,
+		connMap:            make(map[string]*dbConn),
+		dbMetricsCollector: NewDbMetricsCollector(),
+		mutex:              &sync.Mutex{},
+		dbConfig:           conf,
 	}
 
 	// start monitoring db host ip
 	go dbMgr.monitorDBIP(checkDBHostIPInterval)
+
+	// start monitoring db metrics
+	go dbMgr.monitorDbMetrics(monitorDbMetricsInterval)
 
 	return dbMgr
 }
 
 // SQLDBMgr 数据库连接管理
 type SQLDBMgr struct {
-	connMap  map[string]*dbConn
-	mutex    *sync.Mutex
-	dbConfig map[string]*SQLConfig
+	connMap            map[string]*dbConn
+	dbMetricsCollector *DbMetricsCollector
+	mutex              *sync.Mutex
+	dbConfig           map[string]*SQLConfig
 	// dbConfig *viper.Viper
 	isClosed bool
 }
@@ -265,6 +272,21 @@ func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
 
 		// sleep period
 		time.Sleep(period)
+	}
+}
+
+func (mgr *SQLDBMgr) monitorDbMetrics(interval time.Duration) {
+	for !mgr.isClosed {
+		for dbName, dbConn := range mgr.connMap {
+			if db := dbConn.DB.DB(); db != nil {
+				mgr.dbMetricsCollector.CollectDbStats(dbName, db.Stats())
+			} else {
+				mgr.dbMetricsCollector.CollectDbStats(dbName, sql.DBStats{})
+			}
+		}
+
+		// sleep period
+		time.Sleep(interval)
 	}
 }
 
