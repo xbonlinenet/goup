@@ -421,14 +421,14 @@ func (mgr *SQLDBMgr) registerErrorCallbackOnDb(name string, db *gorm.DB) {
 	})
 
 	// register update error callback
-	db.Callback().Update().After("gorm:commit_or_rollback_transaction").Register("gorm:delete:error_callback", func(scope *gorm.Scope) {
+	db.Callback().Update().After("gorm:commit_or_rollback_transaction").Register("gorm:update:error_callback", func(scope *gorm.Scope) {
 		if scope.HasError() && mgr.dbErrorCallback != nil {
 			mgr.dbErrorCallback(name, "update", scope.SQL, scope.DB().Error)
 		}
 	})
 
 	// register query error callback
-	db.Callback().Query().After("gorm:after_query").Register("gorm:delete:error_callback", func(scope *gorm.Scope) {
+	db.Callback().Query().After("gorm:after_query").Register("gorm:query:error_callback", func(scope *gorm.Scope) {
 		if scope.HasError() && mgr.dbErrorCallback != nil {
 			mgr.dbErrorCallback(name, "query", scope.SQL, scope.DB().Error)
 		}
