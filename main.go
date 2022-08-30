@@ -36,6 +36,9 @@ func main() {
 		frame.BeforeServerExit(func() {
 			fmt.Println("it will be done before server shutdown")
 		}),
+		frame.SetDbErrorCallback(func(name, queryType, sql string, err error) {
+			fmt.Printf("[DbErrorCallback] data name: %s, query type: %s, sql: %s, err: %s\n", name, queryType, sql, err)
+		}),
 	)
 }
 

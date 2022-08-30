@@ -88,6 +88,7 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 
 	callInitFuncByConfigCondition(func() {
 		data.InitSQLMgr(serverConfig.customSqlConf)
+		data.SetDbErrorCallback(serverConfig.dbErrorCallback)
 	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.db")
 
 	callInitFuncByConfigCondition(func() {

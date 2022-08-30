@@ -121,3 +121,9 @@ func AfterServerExit(f func()) Option {
 		cfg.afterServerExit = f
 	})
 }
+
+func SetDbErrorCallback(callback data.DbErrorCallback) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.dbErrorCallback = callback
+	})
+}
