@@ -111,9 +111,10 @@ func NewDbMetricsCollector() *DbMetricsCollector {
 func (m *DbMetricsCollector) CollectDbStats(name string, stats sql.DBStats) {
 	dbStats, ok := m.statsMap[name]
 	if !ok {
-		m.statsMap[name] = newStats(map[string]string{
+		dbStats = newStats(map[string]string{
 			"name": name,
 		})
+		m.statsMap[name] = dbStats
 	}
 
 	dbStats.Set(stats)

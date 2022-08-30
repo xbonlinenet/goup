@@ -34,7 +34,7 @@ type SQLConfig struct {
 
 const (
 	checkDBHostIPInterval    = time.Second * 5
-	monitorDbMetricsInterval = time.Second * 15
+	monitorDbMetricsInterval = time.Second * 5
 )
 
 var (
