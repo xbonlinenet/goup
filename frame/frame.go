@@ -89,8 +89,8 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 	callInitFuncByConfigCondition(func() {
 		data.InitSQLMgr(serverConfig.customSqlConf)
 
-		// DB 错误回调
-		if serverConfig.dbErrorCallback == nil && viper.GetBool("goup.db.default_error_callback")     {
+		// 设置 DB 错误回调
+		if serverConfig.dbErrorCallback == nil && viper.GetBool("goup.db.default_error_callback") {
 			serverConfig.dbErrorCallback = DefaultDbErrorCallback
 		}
 		data.SetDbErrorCallback(serverConfig.dbErrorCallback)

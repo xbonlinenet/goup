@@ -103,7 +103,7 @@ func MustGetDB(name string) *gorm.DB {
 	return sqlMgr.mustGetDB(name)
 }
 
-type DbErrorCallback = func(name string, queryType string, sql string, err error)
+type DbErrorCallback = func(name string, queryType string, sql string, err error, scope *gorm.Scope)
 
 func SetDbErrorCallback(callback DbErrorCallback) {
 	if sqlMgr == nil {
@@ -409,28 +409,28 @@ func (mgr *SQLDBMgr) registerErrorCallbackOnDb(name string, db *gorm.DB) {
 	// register create error callback
 	db.Callback().Create().After("gorm:commit_or_rollback_transaction").Register("gorm:create:error_callback", func(scope *gorm.Scope) {
 		if scope.HasError() && mgr.dbErrorCallback != nil {
-			mgr.dbErrorCallback(name, "create", scope.SQL, scope.DB().Error)
+			mgr.dbErrorCallback(name, "create", scope.SQL, scope.DB().Error, scope)
 		}
 	})
 
 	// register delete error callback
 	db.Callback().Delete().After("gorm:commit_or_rollback_transaction").Register("gorm:delete:error_callback", func(scope *gorm.Scope) {
 		if scope.HasError() && mgr.dbErrorCallback != nil {
-			mgr.dbErrorCallback(name, "delete", scope.SQL, scope.DB().Error)
+			mgr.dbErrorCallback(name, "delete", scope.SQL, scope.DB().Error, scope)
 		}
 	})
 
 	// register update error callback
 	db.Callback().Update().After("gorm:commit_or_rollback_transaction").Register("gorm:update:error_callback", func(scope *gorm.Scope) {
 		if scope.HasError() && mgr.dbErrorCallback != nil {
-			mgr.dbErrorCallback(name, "update", scope.SQL, scope.DB().Error)
+			mgr.dbErrorCallback(name, "update", scope.SQL, scope.DB().Error, scope)
 		}
 	})
 
 	// register query error callback
 	db.Callback().Query().After("gorm:after_query").Register("gorm:query:error_callback", func(scope *gorm.Scope) {
 		if scope.HasError() && mgr.dbErrorCallback != nil {
-			mgr.dbErrorCallback(name, "query", scope.SQL, scope.DB().Error)
+			mgr.dbErrorCallback(name, "query", scope.SQL, scope.DB().Error, scope)
 		}
 	})
 
@@ -451,7 +451,7 @@ func (mgr *SQLDBMgr) registerErrorCallbackOnDb(name string, db *gorm.DB) {
 		}
 
 		if rowsQueryResult.Error != nil {
-			mgr.dbErrorCallback(name, "row_query", scope.SQL, rowsQueryResult.Error)
+			mgr.dbErrorCallback(name, "row_query", scope.SQL, rowsQueryResult.Error, scope)
 		}
 	})
 }

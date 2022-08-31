@@ -132,7 +132,7 @@ func SetDbErrorCallback(callback data.DbErrorCallback) Option {
 	})
 }
 
-func DefaultDbErrorCallback(name, queryType, sql string, err error) {
+func DefaultDbErrorCallback(name, queryType, sql string, err error, scope *gorm.Scope) {
 	if err == nil {
 		return
 	}
