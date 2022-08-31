@@ -1,7 +1,11 @@
 package frame
 
 import (
+	"fmt"
+
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"github.com/xbonlinenet/goup/frame/data"
 )
 
@@ -119,5 +123,27 @@ func BeforeServerExit(f func()) Option {
 func AfterServerExit(f func()) Option {
 	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.afterServerExit = f
+	})
+}
+
+func SetDbErrorCallback(callback data.DbErrorCallback) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.dbErrorCallback = callback
+	})
+}
+
+func DefaultDbErrorCallback(name, queryType, sql string, err error, scope *gorm.Scope) {
+	if err == nil {
+		return
+	}
+
+	if gorm.IsRecordNotFoundError(err) {
+		return
+	}
+
+	message := fmt.Sprintf("db_name=%s,query_type=%s,err=%s\nsql=\n%s\n", name, queryType, err.Error(), sql)
+	sentry.WithScope(func(scope *sentry.Scope) {
+		scope.SetTag("notify_level", "normal")
+		sentry.CaptureMessage(message)
 	})
 }
