@@ -12,18 +12,18 @@
 
 ```go
 frame.BootstrapServer(
-    ctx,
-    frame.BeforeServerRun(registerRouter),
-    frame.Version(version),
-    frame.CustomRouter(customRouter),
-    frame.ReportApi("http://192.168.0.22:14000/api/doc/report"),
-    frame.CustomSqlConf(customSqlConf),
-    frame.BeforeServerExit(func() {
-        fmt.Println("it will be done before server shutdown")
-    }),
-    frame.SetDbErrorCallback(func(name, queryType, sql string, err error) {
-        fmt.Printf("[DbErrorCallback] data name: %s, query type: %s, sql: %s, err: %s\n", name, queryType, sql, err)
-    }),
+  ctx,
+  frame.BeforeServerRun(registerRouter),
+  frame.Version(version),
+  frame.CustomRouter(customRouter),
+  frame.ReportApi("http://192.168.0.22:14000/api/doc/report"),
+  frame.CustomSqlConf(customSqlConf),
+  frame.BeforeServerExit(func() {
+    fmt.Println("it will be done before server shutdown")
+  }),
+  frame.SetDbErrorCallback(func(name, queryType, sql string, err error, scope *gorm.Scope) {
+    fmt.Printf("[DbErrorCallback] data name: %s, query type: %s, sql: %s, err: %s\n", name, queryType, sql, err)
+  }),
 )
 ```
 
