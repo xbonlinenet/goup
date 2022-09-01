@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +23,8 @@ import (
 	"github.com/xbonlinenet/goup/frame/recovery"
 	"github.com/xbonlinenet/goup/frame/util"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 var (
 	apiHandlerFuncMap = map[string]*HandlerInfo{}
@@ -90,8 +92,29 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 	defer func() {
 		if err := recover(); err != nil {
 			stack := recovery.Stack(3)
+
+			// bind body
+			var body interface{}
+			switch c.ContentType() {
+			case "application/json":
+				if err := c.ShouldBindBodyWith(&body, binding.JSON); err != nil {
+					log.Default().Error("should bind body error", zap.Error(err))
+				}
+			}
+			bodyInJson, _ := json.MarshalToString(body)
+
+			log.Default().Error(
+				"recover from handlerApiRequest",
+				zap.String("request_path", c.Request.URL.Path),
+				zap.Any("request_body", body),
+				zap.String("error", fmt.Sprintf("%s", err)),
+			)
+
 			log.GetLogger("error").Sugar().Errorf("[Recovery] %s, %v\n %s", err, c.Request.URL.Path, stack)
-			notifyMsg, notifyDetail, notifyErrorID := fmt.Sprintf("Error: %s", err), string(stack), c.Request.URL.Path
+			notifyMsg := fmt.Sprintf("Error: %s", err)
+			notifyDetail := fmt.Sprintf("RequestBody: %s\nStack:\n%s", bodyInJson, string(stack))
+			notifyErrorID := c.Request.URL.Path
+
 			alter.Notify(notifyMsg, notifyDetail, notifyErrorID)
 			failHandler(c, http.StatusInternalServerError, ErrUnknowError, notifyMsg+"\n"+string(stack))
 		}
