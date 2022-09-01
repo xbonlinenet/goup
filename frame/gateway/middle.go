@@ -91,6 +91,7 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 
 	defer func() {
 		if err := recover(); err != nil {
+			elapsedDuration := time.Since(start)
 			stack := recovery.Stack(3)
 
 			// bind body
@@ -103,16 +104,17 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 			}
 			bodyInJson, _ := json.MarshalToString(body)
 
-			log.Default().Error(
+			log.GetLogger("error").Error(
 				"recover from handlerApiRequest",
 				zap.String("request_path", c.Request.URL.Path),
 				zap.Any("request_body", body),
+				zap.Duration("elapsed", elapsedDuration),
 				zap.String("error", fmt.Sprintf("%s", err)),
 			)
 
 			log.GetLogger("error").Sugar().Errorf("[Recovery] %s, %v\n %s", err, c.Request.URL.Path, stack)
 			notifyMsg := fmt.Sprintf("Error: %s", err)
-			notifyDetail := fmt.Sprintf("RequestBody: %s\nStack:\n%s", bodyInJson, string(stack))
+			notifyDetail := fmt.Sprintf("ElapsedDuration: %s\nRequestBody: %s\nStack:\n%s", elapsedDuration, bodyInJson, string(stack))
 			notifyErrorID := c.Request.URL.Path
 
 			alter.Notify(notifyMsg, notifyDetail, notifyErrorID)
