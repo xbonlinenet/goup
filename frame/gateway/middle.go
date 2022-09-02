@@ -1,13 +1,16 @@
 package gateway
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
 
@@ -116,6 +119,24 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 			notifyMsg := fmt.Sprintf("Error: %s", err)
 			notifyDetail := fmt.Sprintf("ElapsedDuration: %s\nRequestBody: %s\nStack:\n%s", elapsedDuration, bodyInJson, string(stack))
 			notifyErrorID := c.Request.URL.Path
+
+			isBrokenPipeError := func(err interface{}) bool {
+				switch v := err.(type) {
+				case error:
+					return errors.Is(v, syscall.EPIPE)
+				}
+
+				return false
+			}
+
+			if isBrokenPipeError(err) {
+				// 如果链接已经断开，则不再需要使用 failHandler
+				sentry.WithScope(func(scope *sentry.Scope) {
+					scope.SetTag("notify_level", "normal")
+					sentry.CaptureMessage(fmt.Sprintf("%s\nErrorId: %s\nDetail:\n%s", notifyMsg, notifyErrorID, notifyDetail))
+				})
+				return
+			}
 
 			alter.Notify(notifyMsg, notifyDetail, notifyErrorID)
 			failHandler(c, http.StatusInternalServerError, ErrUnknowError, notifyMsg+"\n"+string(stack))
