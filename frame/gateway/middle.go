@@ -120,16 +120,16 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 			notifyDetail := fmt.Sprintf("ElapsedDuration: %s\nRequestBody: %s\nStack:\n%s", elapsedDuration, bodyInJson, string(stack))
 			notifyErrorID := c.Request.URL.Path
 
-			isBrokenPipeError := func(err interface{}) bool {
+			isBadPipeError := func(err interface{}) bool {
 				switch v := err.(type) {
 				case error:
-					return errors.Is(v, syscall.EPIPE)
+					return errors.Is(v, syscall.EPIPE) || errors.Is(v, syscall.ECONNRESET)
 				}
 
 				return false
 			}
 
-			if isBrokenPipeError(err) {
+			if isBadPipeError(err) {
 				// 如果链接已经断开，则不再需要使用 failHandler
 				sentry.WithScope(func(scope *sentry.Scope) {
 					scope.SetTag("notify_level", "normal")
