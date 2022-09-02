@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net"
@@ -32,7 +33,8 @@ type SQLConfig struct {
 }
 
 const (
-	checkDBHostIPInterval = time.Second * 5
+	checkDBHostIPInterval    = time.Second * 5
+	monitorDbMetricsInterval = time.Second * 5
 )
 
 var (
@@ -101,6 +103,16 @@ func MustGetDB(name string) *gorm.DB {
 	return sqlMgr.mustGetDB(name)
 }
 
+type DbErrorCallback = func(name string, queryType string, sql string, err error, scope *gorm.Scope)
+
+func SetDbErrorCallback(callback DbErrorCallback) {
+	if sqlMgr == nil {
+		panic(ErrSQLNotInited)
+	}
+
+	sqlMgr.dbErrorCallback = callback
+}
+
 type dbConn struct {
 	DB     *gorm.DB
 	Addr   string
@@ -130,24 +142,28 @@ func (c *dbConn) Close() error {
 // newSQLDBMgr 根据配置创建新的数据库连接管理
 func newSQLDBMgr(conf map[string]*SQLConfig) *SQLDBMgr {
 	dbMgr := &SQLDBMgr{
-		connMap:  make(map[string]*dbConn),
-		mutex:    &sync.Mutex{},
-		dbConfig: conf,
+		connMap:            make(map[string]*dbConn),
+		dbMetricsCollector: NewDbMetricsCollector(),
+		dbConfig:           conf,
 	}
 
 	// start monitoring db host ip
 	go dbMgr.monitorDBIP(checkDBHostIPInterval)
+
+	// start monitoring db metrics
+	go dbMgr.monitorDbMetrics(monitorDbMetricsInterval)
 
 	return dbMgr
 }
 
 // SQLDBMgr 数据库连接管理
 type SQLDBMgr struct {
-	connMap  map[string]*dbConn
-	mutex    *sync.Mutex
-	dbConfig map[string]*SQLConfig
-	// dbConfig *viper.Viper
-	isClosed bool
+	mutex              sync.Mutex
+	connMap            map[string]*dbConn    // 连接
+	dbMetricsCollector *DbMetricsCollector   // 收集 DB 连接指标
+	dbConfig           map[string]*SQLConfig // DB 配置
+	isClosed           bool                  // 是否已经关闭 TODO: 使用 channel 代替
+	dbErrorCallback    DbErrorCallback       // DB 错误回调
 }
 
 // getDB 根据名称获取数据库连接
@@ -165,7 +181,7 @@ func (mgr *SQLDBMgr) getDB(name string) (*gorm.DB, error) {
 		return conn.DB, nil
 	}
 
-	conn, err := initDBConn(config, name)
+	conn, err := mgr.initDBConn(config, name)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +223,7 @@ func (mgr *SQLDBMgr) updateDBConn(name string) error {
 		return ErrSQLConfig
 	}
 
-	newConn, err := initDBConn(config, name)
+	newConn, err := mgr.initDBConn(config, name)
 	if err != nil {
 		return err
 	}
@@ -265,6 +281,21 @@ func (mgr *SQLDBMgr) monitorDBIP(period time.Duration) {
 
 		// sleep period
 		time.Sleep(period)
+	}
+}
+
+func (mgr *SQLDBMgr) monitorDbMetrics(interval time.Duration) {
+	for !mgr.isClosed {
+		for dbName, dbConn := range mgr.connMap {
+			if db := dbConn.DB.DB(); db != nil {
+				mgr.dbMetricsCollector.CollectDbStats(dbName, db.Stats())
+			} else {
+				mgr.dbMetricsCollector.CollectDbStats(dbName, sql.DBStats{})
+			}
+		}
+
+		// sleep period
+		time.Sleep(interval)
 	}
 }
 
@@ -331,7 +362,7 @@ func initPostgres(config *SQLConfig, name string) (*gorm.DB, error) {
 	return db, nil
 }
 
-func initDBConn(config *SQLConfig, name string) (*dbConn, error) {
+func (mgr *SQLDBMgr) initDBConn(config *SQLConfig, name string) (*dbConn, error) {
 	dbDSN := config.URL
 
 	addr := ""
@@ -366,7 +397,63 @@ func initDBConn(config *SQLConfig, name string) (*dbConn, error) {
 		AddrIP: addrIP,
 	}
 
+	// 注册错误回调
+	mgr.registerErrorCallbackOnDb(name, db)
+
 	return conn, nil
+}
+
+func (mgr *SQLDBMgr) registerErrorCallbackOnDb(name string, db *gorm.DB) {
+	// 开发参考文档： https://v1.gorm.io/docs/write_plugins.html#callbacks
+
+	// register create error callback
+	db.Callback().Create().After("gorm:commit_or_rollback_transaction").Register("gorm:create:error_callback", func(scope *gorm.Scope) {
+		if scope.HasError() && mgr.dbErrorCallback != nil {
+			mgr.dbErrorCallback(name, "create", scope.SQL, scope.DB().Error, scope)
+		}
+	})
+
+	// register delete error callback
+	db.Callback().Delete().After("gorm:commit_or_rollback_transaction").Register("gorm:delete:error_callback", func(scope *gorm.Scope) {
+		if scope.HasError() && mgr.dbErrorCallback != nil {
+			mgr.dbErrorCallback(name, "delete", scope.SQL, scope.DB().Error, scope)
+		}
+	})
+
+	// register update error callback
+	db.Callback().Update().After("gorm:commit_or_rollback_transaction").Register("gorm:update:error_callback", func(scope *gorm.Scope) {
+		if scope.HasError() && mgr.dbErrorCallback != nil {
+			mgr.dbErrorCallback(name, "update", scope.SQL, scope.DB().Error, scope)
+		}
+	})
+
+	// register query error callback
+	db.Callback().Query().After("gorm:after_query").Register("gorm:query:error_callback", func(scope *gorm.Scope) {
+		if scope.HasError() && mgr.dbErrorCallback != nil {
+			mgr.dbErrorCallback(name, "query", scope.SQL, scope.DB().Error, scope)
+		}
+	})
+
+	// register row_query error callback
+	db.Callback().RowQuery().After("gorm:row_query").Register("gorm:row_query:error_callback", func(scope *gorm.Scope) {
+		if mgr.dbErrorCallback == nil {
+			return
+		}
+
+		result, ok := scope.InstanceGet("row_query_result")
+		if !ok {
+			return
+		}
+
+		rowsQueryResult, ok := result.(*gorm.RowsQueryResult)
+		if !ok {
+			return
+		}
+
+		if rowsQueryResult.Error != nil {
+			mgr.dbErrorCallback(name, "row_query", scope.SQL, rowsQueryResult.Error, scope)
+		}
+	})
 }
 
 func lookupAddrIP(addr string) ([]string, error) {

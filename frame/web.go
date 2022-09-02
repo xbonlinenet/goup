@@ -153,6 +153,7 @@ type bootstarpServerConfig struct {
 	customApiPathPrefix string
 	beforeServerExit    func() // 注册hook函数，在服务优雅关闭之前执行
 	afterServerExit     func()
+	dbErrorCallback     data.DbErrorCallback // DB 错误回调
 }
 
 var httpClient = &http.Client{
