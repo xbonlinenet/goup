@@ -27,8 +27,9 @@ import (
 func BootstrapServer(ctx context.Context, options ...Option) {
 
 	config := &bootstarpServerConfig{
-		customSqlConf:   make(map[string]*data.SQLConfig),
-		custonRedisConf: make(map[string]*data.RedisConfig),
+		customSqlConf:     make(map[string]*data.SQLConfig),
+		custonRedisConf:   make(map[string]*data.RedisConfig),
+		enableHttpHealthz: true,
 	}
 
 	for _, opt := range options {
@@ -95,6 +96,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 
 	if config.enableHttpHealthz {
 		r.GET("/system/healthz", gateway.HttpHealthz)
+		r.GET("/healthz", gateway.HttpHealthz)
 	}
 
 	addr := viper.GetString("server.addr")
@@ -112,7 +114,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	go server.ListenAndServe()
 
 	// 监听退出信号
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 10)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 	sig := <-ch
 	fmt.Println("got a signal", sig)
