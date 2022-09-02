@@ -60,15 +60,15 @@ func RecoveryWithWriter() gin.HandlerFunc {
 				notifyErrorID := c.Request.URL.Path
 
 				// 判断是否是连接断开错误
-				isBrokenPipeError := func(err interface{}) bool {
+				isBadPipeError := func(err interface{}) bool {
 					switch v := err.(type) {
 					case error:
-						return errors.Is(v, syscall.EPIPE)
+						return errors.Is(v, syscall.EPIPE) || errors.Is(v, syscall.ECONNRESET)
 					}
 
 					return false
 				}
-				if isBrokenPipeError(err) {
+				if isBadPipeError(err) {
 					// 如果链接已经断开，则不再写入数据
 					sentry.WithScope(func(scope *sentry.Scope) {
 						scope.SetTag("notify_level", "normal")
