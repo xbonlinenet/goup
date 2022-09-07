@@ -66,14 +66,19 @@ func Default() *zap.Logger {
 	}
 
 	testLoggerOnce.Do(func() {
-		config := zap.NewProductionConfig()
-		config.Encoding = "console"
-		config.OutputPaths = []string{"stdout"}
-		var err error
-		testLogger, err = config.Build()
-		if err != nil {
-			panic(err)
+		if isRunningInDockerContainer() {
+			testLogger, _ = zap.NewProduction()
+		} else {
+			config := zap.NewProductionConfig()
+			config.Encoding = "console"
+			config.OutputPaths = []string{"stdout"}
+			var err error
+			testLogger, err = config.Build()
+			if err != nil {
+				panic(err)
+			}
 		}
+
 	})
 	// For test case
 	return testLogger
