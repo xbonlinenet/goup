@@ -100,11 +100,11 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	}
 
 	addr := viper.GetString("server.addr")
-	if util.IsRunningInDockerContainer() {
-		// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
-		addr = "0.0.0.0:8080"
-		log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
-	}
+	// if util.IsRunningInDockerContainer() {
+	// 	// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
+	// 	addr = "0.0.0.0:8080"
+	// 	log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
+	// }
 
 	server := &http.Server{
 		Addr:    addr,
