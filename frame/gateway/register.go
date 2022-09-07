@@ -125,7 +125,7 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
 				// 处理 *Foo
-				fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
+				// fmt.Printf("ptr type: %s\n", field.Type.Elem().String())
 				info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 				types = append(types, info.types...)
 
@@ -146,7 +146,7 @@ func getDTOFieldInfoImpl(dto reflect.Type, sub bool, foundTypes map[string]struc
 				field.Type.Elem().Kind() == reflect.Struct {
 				// 处理 map[string]Foo
 
-				fmt.Printf("map type: %s\n", field.Type.Elem().String())
+				// fmt.Printf("map type: %s\n", field.Type.Elem().String())
 
 				info := getDTOFieldInfoImpl(field.Type.Elem(), true, foundTypes)
 				types = append(types, info.types...)
