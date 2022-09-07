@@ -28,16 +28,28 @@ type Conf struct {
 func Init() error {
 	loggers := viper.GetStringMap("log")
 
-	forceLogToStdout := viper.GetBool("application.forceLog2Stdout")
-	for k, _ := range loggers {
-		var conf Conf
-		err := viper.Sub("log").Sub(k).Unmarshal(&conf)
+	if isRunningInDockerContainer() {
+		logger, err := zap.NewProduction()
 		if err != nil {
 			return err
 		}
-		log := initLogger(&conf, forceLogToStdout)
-		logMap[k] = log
+		for loggerName := range loggers {
+			logMap[loggerName] = logger
+		}
+
+	} else {
+		forceLogToStdout := viper.GetBool("application.forceLog2Stdout")
+		for k, _ := range loggers {
+			var conf Conf
+			err := viper.Sub("log").Sub(k).Unmarshal(&conf)
+			if err != nil {
+				return err
+			}
+			log := initLogger(&conf, forceLogToStdout)
+			logMap[k] = log
+		}
 	}
+
 	return nil
 }
 
@@ -88,7 +100,7 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 		}
 	}()
 
-	zapLevle := transformLevel(conf.Level)
+	zapLevel := transformLevel(conf.Level)
 
 	encoder := zapcore.EncoderConfig{
 		// Keys can be anything except the empty string.
@@ -119,7 +131,7 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 	core := zapcore.NewCore(
 		zapcore.NewConsoleEncoder(encoder),
 		fileWriter,
-		zapLevle,
+		zapLevel,
 	)
 
 	logger := zap.New(core, zap.AddCaller())
@@ -167,4 +179,18 @@ func GetLogFields(keyValuePairs ...interface{}) []zap.Field {
 	}
 
 	return fields
+}
+
+func isRunningInDockerContainer() bool {
+	return true
+	// docker creates a .dockerenv file at the root
+	// of the directory tree inside the container.
+	// if this file exists then the viewer is running
+	// from inside a container so return true
+
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	return false
 }
