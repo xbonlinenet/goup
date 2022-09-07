@@ -187,7 +187,6 @@ func GetLogFields(keyValuePairs ...interface{}) []zap.Field {
 }
 
 func isRunningInDockerContainer() bool {
-	return true
 	// docker creates a .dockerenv file at the root
 	// of the directory tree inside the container.
 	// if this file exists then the viewer is running
