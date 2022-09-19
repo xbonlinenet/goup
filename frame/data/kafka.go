@@ -12,6 +12,7 @@ import (
 	cluster "github.com/bsm/sarama-cluster"
 	"github.com/spf13/viper"
 	"github.com/xbonlinenet/goup/frame/log"
+	"go.uber.org/zap"
 )
 
 var kafkaCtx context.Context
@@ -121,12 +122,12 @@ func MustGetAsyncProducer() sarama.AsyncProducer {
 		go func() {
 			for {
 				select {
-				case <-producer.Successes():
-					log.Default().Sugar().Infof("producer success")
-				case <-kafkaCtx.Done():
-					break
+				case msg := <-producer.Successes():
+					log.Default().Debug("produce success", zap.String("topic", msg.Topic))
 				case err := <-producer.Errors():
-					log.Default().Sugar().Errorf("producer error: %s ", err.Error())
+					log.Default().Error("produce error", zap.String("topic", err.Msg.Topic), zap.Error(err.Err))
+				case <-kafkaCtx.Done():
+					return
 				}
 			}
 		}()

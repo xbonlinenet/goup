@@ -1,19 +1,20 @@
 package gateway
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/xbonlinenet/goup/frame/util"
-	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/xbonlinenet/goup/frame/util"
+	"go.uber.org/zap"
 
 	"github.com/xbonlinenet/goup/frame/log"
 )
 
 type CORSHandler struct {
-	AllowHosts []string
-	AllowAll   bool
+	AllowHosts           []string
+	AllowAll             bool
 	allowedCustomHeaders []string
 }
 
@@ -28,8 +29,8 @@ func NewCORSHandler(allowHosts []string, customHeaders ...string) *CORSHandler {
 	}
 
 	return &CORSHandler{
-		AllowHosts: allowHosts,
-		AllowAll:   allowAll,
+		AllowHosts:           allowHosts,
+		AllowAll:             allowAll,
 		allowedCustomHeaders: customHeaders,
 	}
 }
@@ -42,7 +43,7 @@ func (h *CORSHandler) CheckOriginByRequest(r *http.Request) bool {
 func (h *CORSHandler) CheckOrigin(origin string) bool {
 	if origin == "" {
 		// 非浏览器请求
-		log.Default().Warn("CheckOrigin(): found 'Origin' is empty from header!")
+		log.Default().Debug("CheckOrigin(): found 'Origin' is empty from header!")
 		return false
 	}
 

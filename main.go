@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 
 	"github.com/xbonlinenet/goup/demo"
 	"github.com/xbonlinenet/goup/frame"
@@ -35,6 +36,13 @@ func main() {
 		frame.CustomSqlConf(customSqlConf),
 		frame.BeforeServerExit(func() {
 			fmt.Println("it will be done before server shutdown")
+		}),
+		frame.SetDbErrorCallback(func(name, queryType, sql string, err error, scope *gorm.Scope) {
+			if gorm.IsRecordNotFoundError(err) {
+				fmt.Printf("[DbErrorCallback] record not found, data name: %s, query type: %s, sql: %s, err: %s\n", name, queryType, sql, err)
+			}
+
+			fmt.Printf("[DbErrorCallback] data name: %s, query type: %s, sql: %s, err: %s\n", name, queryType, sql, err)
 		}),
 	)
 }

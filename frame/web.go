@@ -27,8 +27,9 @@ import (
 func BootstrapServer(ctx context.Context, options ...Option) {
 
 	config := &bootstarpServerConfig{
-		customSqlConf:   make(map[string]*data.SQLConfig),
-		custonRedisConf: make(map[string]*data.RedisConfig),
+		customSqlConf:     make(map[string]*data.SQLConfig),
+		custonRedisConf:   make(map[string]*data.RedisConfig),
+		enableHttpHealthz: true,
 	}
 
 	for _, opt := range options {
@@ -95,14 +96,15 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 
 	if config.enableHttpHealthz {
 		r.GET("/system/healthz", gateway.HttpHealthz)
+		r.GET("/healthz", gateway.HttpHealthz)
 	}
 
 	addr := viper.GetString("server.addr")
-	if util.IsRunningInDockerContainer() {
-		// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
-		addr = "0.0.0.0:8080"
-		log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
-	}
+	// if util.IsRunningInDockerContainer() {
+	// 	// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
+	// 	addr = "0.0.0.0:8080"
+	// 	log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
+	// }
 
 	server := &http.Server{
 		Addr:    addr,
@@ -112,7 +114,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	go server.ListenAndServe()
 
 	// 监听退出信号
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 10)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 	sig := <-ch
 	fmt.Println("got a signal", sig)
@@ -127,8 +129,11 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	if err != nil {
 		fmt.Println("shutdown err: ", err)
 	}
+	if config.afterServerExit != nil {
+		fmt.Println("executing hook function，server has shutdown.")
+		config.afterServerExit()
+	}
 	fmt.Println("----exited-----", time.Since(now))
-
 }
 
 type bootstarpServerConfig struct {
@@ -147,6 +152,8 @@ type bootstarpServerConfig struct {
 	custonRedisConf     map[string]*data.RedisConfig // 自定义 Redis 配置
 	customApiPathPrefix string
 	beforeServerExit    func() // 注册hook函数，在服务优雅关闭之前执行
+	afterServerExit     func()
+	dbErrorCallback     data.DbErrorCallback // DB 错误回调
 }
 
 var httpClient = &http.Client{

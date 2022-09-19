@@ -77,7 +77,8 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 	if len(includes) > 0 {
 		loadIncludeConfigFiles(includes, dir)
 	}
-	log.Init()
+	err = log.Init()
+	util.CheckError(err)
 
 	v, _ := json.Marshal(viper.AllSettings())
 
@@ -87,6 +88,13 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 
 	callInitFuncByConfigCondition(func() {
 		data.InitSQLMgr(serverConfig.customSqlConf)
+
+		// 设置 DB 错误回调
+		if serverConfig.dbErrorCallback == nil && viper.GetBool("goup.db.default_error_callback") {
+			serverConfig.dbErrorCallback = DefaultDbErrorCallback
+		}
+		data.SetDbErrorCallback(serverConfig.dbErrorCallback)
+
 	}, "data.InitSQLMgr", serverConfig.initDbDisabled, "data.db")
 
 	callInitFuncByConfigCondition(func() {

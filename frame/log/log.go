@@ -21,22 +21,35 @@ var (
 type Conf struct {
 	Interval time.Duration
 	Level    string
+	Console  bool
 	Logger   lumberjack.Logger
 }
 
 func Init() error {
 	loggers := viper.GetStringMap("log")
 
-	forceLogToStdout := viper.GetBool("application.forceLog2Stdout")
-	for k, _ := range loggers {
-		var conf Conf
-		err := viper.Sub("log").Sub(k).Unmarshal(&conf)
+	if isRunningInDockerContainer() {
+		logger, err := zap.NewProduction()
 		if err != nil {
 			return err
 		}
-		log := initLogger(&conf, forceLogToStdout)
-		logMap[k] = log
+		for loggerName := range loggers {
+			logMap[loggerName] = logger
+		}
+
+	} else {
+		forceLogToStdout := viper.GetBool("application.forceLog2Stdout")
+		for k, _ := range loggers {
+			var conf Conf
+			err := viper.Sub("log").Sub(k).Unmarshal(&conf)
+			if err != nil {
+				return err
+			}
+			log := initLogger(&conf, forceLogToStdout)
+			logMap[k] = log
+		}
 	}
+
 	return nil
 }
 
@@ -53,14 +66,19 @@ func Default() *zap.Logger {
 	}
 
 	testLoggerOnce.Do(func() {
-		config := zap.NewProductionConfig()
-		config.Encoding = "console"
-		config.OutputPaths = []string{"stdout"}
-		var err error
-		testLogger, err = config.Build()
-		if err != nil {
-			panic(err)
+		if isRunningInDockerContainer() {
+			testLogger, _ = zap.NewProduction()
+		} else {
+			config := zap.NewProductionConfig()
+			config.Encoding = "console"
+			config.OutputPaths = []string{"stdout"}
+			var err error
+			testLogger, err = config.Build()
+			if err != nil {
+				panic(err)
+			}
 		}
+
 	})
 	// For test case
 	return testLogger
@@ -87,8 +105,47 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 		}
 	}()
 
+	zapLevel := transformLevel(conf.Level)
+
+	encoder := zapcore.EncoderConfig{
+		// Keys can be anything except the empty string.
+		TimeKey:       "T",
+		LevelKey:      "L",
+		NameKey:       "N",
+		CallerKey:     "C",
+		MessageKey:    "M",
+		StacktraceKey: "S",
+		// FunctionKey:    "F",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+
+	var fileWriter zapcore.WriteSyncer
+	if !forceLogStdout {
+		if conf.Console {
+			fileWriter = zapcore.NewMultiWriteSyncer(zapcore.AddSync(log), os.Stdout)
+		} else {
+			fileWriter = zapcore.AddSync(log)
+		}
+	} else {
+		fileWriter = zapcore.AddSync(os.Stdout)
+	}
+	core := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoder),
+		fileWriter,
+		zapLevel,
+	)
+
+	logger := zap.New(core, zap.AddCaller())
+	return logger
+}
+
+func transformLevel(level string) zapcore.Level {
 	zapLevle := zapcore.InfoLevel
-	l := strings.ToLower(conf.Level)
+	l := strings.ToLower(level)
 	switch l {
 	case "debug":
 		zapLevle = zapcore.DebugLevel
@@ -103,36 +160,7 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 	case "fatal":
 		zapLevle = zapcore.FatalLevel
 	}
-
-	encoder := zapcore.EncoderConfig{
-		// Keys can be anything except the empty string.
-		TimeKey:        "T",
-		LevelKey:       "L",
-		NameKey:        "N",
-		CallerKey:      "C",
-		MessageKey:     "M",
-		StacktraceKey:  "S",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.StringDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-
-	var w zapcore.WriteSyncer
-	if !forceLogStdout {
-		w = zapcore.AddSync(log)
-	} else {
-		w = zapcore.AddSync(os.Stdout)
-	}
-	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(encoder),
-		w,
-		zapLevle,
-	)
-
-	logger := zap.New(core, zap.AddCaller())
-	return logger
+	return zapLevle
 }
 
 // GetLogFields 传入key value对 key1，value1,key2，value2，key3，value3
@@ -156,4 +184,17 @@ func GetLogFields(keyValuePairs ...interface{}) []zap.Field {
 	}
 
 	return fields
+}
+
+func isRunningInDockerContainer() bool {
+	// docker creates a .dockerenv file at the root
+	// of the directory tree inside the container.
+	// if this file exists then the viewer is running
+	// from inside a container so return true
+
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	return false
 }

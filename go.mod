@@ -22,7 +22,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/json-iterator/go v1.1.12
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
-	github.com/lib/pq v1.10.6 // indirect
+	github.com/lib/pq v1.10.6
 	github.com/olivere/elastic/v7 v7.0.19
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
@@ -38,8 +38,8 @@ require (
 	github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
-	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	go.uber.org/zap v1.19.1
+	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
 	golang.org/x/text v0.3.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

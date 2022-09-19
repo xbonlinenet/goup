@@ -6,12 +6,15 @@ package recovery
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http/httputil"
 	"runtime"
+	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/log"
@@ -51,8 +54,30 @@ func RecoveryWithWriter() gin.HandlerFunc {
 				httprequest, _ := httputil.DumpRequest(c.Request, false)
 				message := fmt.Sprintf("[Recovery] %s panic recovered:\n%s\n%s\n%s%s", TimeFormat(time.Now()), string(httprequest), err, stack, reset)
 				log.Default().Error(message)
-				alter.Notify(fmt.Sprintf("%s occur error.", c.Request.URL.Path), fmt.Sprintf("%s \n %s", err, string(stack)), c.Request.URL.Path)
 
+				notifyMsg := fmt.Sprintf("%s occur error.", c.Request.URL.Path)
+				notifyDetail := fmt.Sprintf("%s \n %s", err, string(stack))
+				notifyErrorID := c.Request.URL.Path
+
+				// 判断是否是连接断开错误
+				isBadPipeError := func(err interface{}) bool {
+					switch v := err.(type) {
+					case error:
+						return errors.Is(v, syscall.EPIPE) || errors.Is(v, syscall.ECONNRESET)
+					}
+
+					return false
+				}
+				if isBadPipeError(err) {
+					// 如果链接已经断开，则不再写入数据
+					sentry.WithScope(func(scope *sentry.Scope) {
+						scope.SetTag("notify_level", "normal")
+						sentry.CaptureMessage(fmt.Sprintf("%s\nErrorId: %s\nDetail:\n%s", notifyMsg, notifyErrorID, notifyDetail))
+					})
+					return
+				}
+
+				alter.Notify(notifyMsg, notifyDetail, notifyErrorID)
 				c.JSON(500, gin.H{
 					"code":    2,
 					"message": fmt.Errorf("%v", err),
