@@ -108,21 +108,22 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 
 	zapLevel := transformLevel(conf.Level)
 
-	encoder := zapcore.EncoderConfig{
-		// Keys can be anything except the empty string.
-		TimeKey:       "T",
-		LevelKey:      "L",
-		NameKey:       "N",
-		CallerKey:     "C",
-		MessageKey:    "M",
-		StacktraceKey: "S",
-		// FunctionKey:    "F",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.StringDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
+	// encoder := zapcore.EncoderConfig{
+	// 	// Keys can be anything except the empty string.
+	// 	TimeKey:       "T",
+	// 	LevelKey:      "L",
+	// 	NameKey:       "N",
+	// 	CallerKey:     "C",
+	// 	MessageKey:    "M",
+	// 	StacktraceKey: "S",
+	// 	// FunctionKey:    "F",
+	// 	LineEnding:     zapcore.DefaultLineEnding,
+	// 	EncodeLevel:    zapcore.CapitalLevelEncoder,
+	// 	EncodeTime:     zapcore.ISO8601TimeEncoder,
+	// 	EncodeDuration: zapcore.StringDurationEncoder,
+	// 	EncodeCaller:   zapcore.ShortCallerEncoder,
+	// }
+	encoder := zap.NewProductionEncoderConfig()
 
 	var fileWriter zapcore.WriteSyncer
 	if !forceLogStdout {
