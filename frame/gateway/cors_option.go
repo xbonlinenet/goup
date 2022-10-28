@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"github.com/xbonlinenet/goup/frame/xblog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -100,6 +101,8 @@ func (h *CORSHandler) BuildCORSHeaders(r *http.Request) map[string]string {
 
 func (h *CORSHandler) WriteCORSHeader(ctx *gin.Context) {
 	headers := h.BuildCORSHeaders(ctx.Request)
+	xblog.Default().Debug("WriteCORSHeader() got headers", zap.Any("headers", headers))
+
 	for key, val := range headers {
 		ctx.Header(key, val)
 	}
