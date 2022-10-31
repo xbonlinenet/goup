@@ -455,6 +455,8 @@ github.com/xbonlinenet/alter/lib v0.0.0-20210616095711-791fbaa6e35d h1:Cfq2Hjzzz
 github.com/xbonlinenet/alter/lib v0.0.0-20210616095711-791fbaa6e35d/go.mod h1:XV37kBJuseVRiP60owlHya74sJHTbdwBeJIQ0Cq6lA8=
 github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03 h1:lhDw+3IP2lZ4Eo5RMpWu+DpguBTY9u2myX1FqUgcr+A=
 github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03/go.mod h1:WqcMov6qk/tTXVPNvvQhVZITxC0G2ls82HJuA+gQrCI=
+github.com/xbonlinenet/go_config_center v0.0.0-20221031061854-6cc277923a8a h1:oWeIi9d3DeuyCuNWy3k9FnPqHJI5vBf5Es/qpUzH89A=
+github.com/xbonlinenet/go_config_center v0.0.0-20221031061854-6cc277923a8a/go.mod h1:WqcMov6qk/tTXVPNvvQhVZITxC0G2ls82HJuA+gQrCI=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v1.0.0/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f h1:J9EGpcZtP0E/raorCMxlFGSTBrsSlaDGf3jU/qvAE2c=

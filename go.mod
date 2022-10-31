@@ -35,7 +35,7 @@ require (
 	github.com/valyala/fasthttp v1.37.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	github.com/xbonlinenet/alter/lib v0.0.0-20210616095711-791fbaa6e35d
-	github.com/xbonlinenet/go_config_center v0.0.0-20200807074255-2f9003909f03
+	github.com/xbonlinenet/go_config_center v0.0.0-20221031061854-6cc277923a8a
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.19.1
