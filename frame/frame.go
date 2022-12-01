@@ -133,10 +133,16 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 		cc.InitConfigCenter(zkServers)
 	}
 
+	env := viper.GetString("application.env")
+	if env == "" {
+		env = "dev"
+	}
+
 	// 初始化 sentry
 	if sentryDsn := viper.GetString("sentry.dsn"); sentryDsn != "" {
 		sentry.Init(sentry.ClientOptions{
-			Dsn: sentryDsn,
+			Dsn:         sentryDsn,
+			Environment: env,
 		})
 	}
 }
