@@ -1,9 +1,13 @@
 package alter
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/viper"
@@ -16,11 +20,59 @@ import (
 )
 
 var (
-	client *lib.Client
+	client            *lib.Client
+	gNotifyFuncHandle NotifyFunc
 )
 
+type NotifyFunc func(message string, detail string, errorID string)
+
+func FeishuNotifyDemo(message string, detail string, errorID string) {
+	msg := fmt.Sprintf("errorId: %s\nmessage: %s\ndetail:%s\n", errorID, message, detail)
+	robotUrl := "https://open.feishu.cn/open-apis/bot/v2/hook/c4e35fdd-7d55-43b2-ba22-0e883a86dd35"
+	FeishuNotify(msg, robotUrl)
+}
+
+func FeishuNotify(msg, robotUrl string) {
+	// robotUrl: 你复制的webhook地址
+	payload_message := map[string]interface{}{
+		"msg_type": "text",
+		"content": map[string]interface{}{
+			"text": "test-message",
+		},
+	}
+	// cli := &http.Client{}
+
+	cli := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 20,
+			TLSHandshakeTimeout: 3000 * time.Millisecond,
+		},
+		Timeout: time.Millisecond * 5000,
+	}
+
+	buf, err := json.Marshal(payload_message)
+	if err != nil {
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodPost, robotUrl, bytes.NewBuffer(buf))
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resBuf, err := cli.Do(req)
+	if err != nil {
+		return
+	}
+	defer resBuf.Body.Close()
+}
+
 // InitAlter 初始化报警模块
-func InitAlter() {
+func InitAlter(notifyFuncHandle NotifyFunc) {
+	if notifyFuncHandle != nil {
+		gNotifyFuncHandle = notifyFuncHandle
+	}
+
 	gateway := data.MustGetRedis("gateway")
 	users := viper.GetStringSlice("alter.users")
 	robotUrls := viper.GetStringSlice("alter.robot-urls")
@@ -37,6 +89,11 @@ func InitAlter() {
 
 // Notify 通知异常错误
 func Notify(message string, detail string, errorID string) {
+	if gNotifyFuncHandle != nil {
+		gNotifyFuncHandle(message, detail, errorID)
+		return
+	}
+
 	client.Alter(message, detail, errorID)
 
 	// sentry 通知

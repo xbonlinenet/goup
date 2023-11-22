@@ -16,6 +16,7 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/data"
 	"github.com/xbonlinenet/goup/frame/gateway"
 	"github.com/xbonlinenet/goup/frame/log"
@@ -166,6 +167,7 @@ type bootstarpServerConfig struct {
 	afterServerExit     func()
 	dbErrorCallback     data.DbErrorCallback // DB 错误回调
 	pprofToken          string
+	NotifyFuncHandler   alter.NotifyFunc
 }
 
 var httpClient = &http.Client{

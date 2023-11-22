@@ -6,6 +6,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/xbonlinenet/goup/frame/alter"
 	"github.com/xbonlinenet/goup/frame/data"
 )
 
@@ -151,5 +152,11 @@ func DefaultDbErrorCallback(name, queryType, sql string, err error, scope *gorm.
 func PProfToken(token string) Option {
 	return optionFunc(func(cfg *bootstarpServerConfig) {
 		cfg.pprofToken = token
+	})
+}
+
+func SetNotifyFuncHandle(f alter.NotifyFunc) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.NotifyFuncHandler = f
 	})
 }

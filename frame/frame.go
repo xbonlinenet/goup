@@ -109,7 +109,7 @@ func initFrameWorkImpl(serverConfig *bootstarpServerConfig) {
 	users := viper.GetStringSlice("alter.users")
 	robotUrls := viper.GetStringSlice("alter.robot-urls")
 	if len(users) > 0 || len(robotUrls) > 0 {
-		alter.InitAlter()
+		alter.InitAlter(serverConfig.NotifyFuncHandler)
 	}
 
 	log.Default().Info(fmt.Sprintf("Version: %s", util.Version))
