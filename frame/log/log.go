@@ -22,6 +22,7 @@ type Conf struct {
 	Interval time.Duration
 	Level    string
 	Console  bool
+	Encoder  string //输出日志的编码方式 console (默认), json
 	Logger   lumberjack.Logger
 }
 
@@ -133,11 +134,15 @@ func initLogger(conf *Conf, forceLogStdout bool) *zap.Logger {
 	} else {
 		fileWriter = zapcore.AddSync(os.Stdout)
 	}
-	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(encoder),
-		fileWriter,
-		zapLevel,
-	)
+
+	var coder zapcore.Encoder
+	if conf.Encoder == "json" {
+		coder = zapcore.NewJSONEncoder(encoder)
+	} else {
+		coder = zapcore.NewConsoleEncoder(encoder)
+	}
+
+	core := zapcore.NewCore(coder, fileWriter, zapLevel)
 
 	logger := zap.New(core, zap.AddCaller())
 	return logger

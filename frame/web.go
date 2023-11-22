@@ -30,6 +30,7 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 		customSqlConf:     make(map[string]*data.SQLConfig),
 		custonRedisConf:   make(map[string]*data.RedisConfig),
 		enableHttpHealthz: true,
+		pprofToken:        "hello world",
 	}
 
 	for _, opt := range options {
@@ -72,6 +73,22 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	if config.beforeServerRun != nil {
 		config.beforeServerRun()
 	}
+	// pprof 真正收集数据是在访问服务的时候
+	// 默认打开方便后续定位性能问题
+	// $ curl -o profile.out https://host/debug/pprof -X 'X-Authorization: $TOKEN'
+	// $ go tool pprof profile.out
+	debugGroup := r.Group("/debug", func(c *gin.Context) {
+		if config.pprofToken == "" {
+			c.Next()
+		} else {
+			if c.Request.Header.Get("Authorization") != config.pprofToken {
+				c.AbortWithStatus(http.StatusForbidden)
+				return
+			}
+			c.Next()
+		}
+	})
+	pprof.RouteRegister(debugGroup, "pprof")
 
 	debug := viper.GetBool("application.debug")
 	if debug {
@@ -88,9 +105,8 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 			reportApi(viper.GetString("application.name"), port, config.reportApiDocAddr)
 		}
 
-		pprof.Register(r)
-
 	} else {
+
 		gin.SetMode("release")
 	}
 
@@ -100,11 +116,6 @@ func BootstrapServer(ctx context.Context, options ...Option) {
 	}
 
 	addr := viper.GetString("server.addr")
-	// if util.IsRunningInDockerContainer() {
-	// 	// 运行在容器里, 则直接监听固定的端口(几乎不可能存在端口冲突的可能)
-	// 	addr = "0.0.0.0:8080"
-	// 	log.Sugar().Warnf("!!! Warning: will change listen addr to %s, since current service running in container!", addr)
-	// }
 
 	server := &http.Server{
 		Addr:    addr,
@@ -154,6 +165,7 @@ type bootstarpServerConfig struct {
 	beforeServerExit    func() // 注册hook函数，在服务优雅关闭之前执行
 	afterServerExit     func()
 	dbErrorCallback     data.DbErrorCallback // DB 错误回调
+	pprofToken          string
 }
 
 var httpClient = &http.Client{

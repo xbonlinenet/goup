@@ -147,3 +147,9 @@ func DefaultDbErrorCallback(name, queryType, sql string, err error, scope *gorm.
 		sentry.CaptureMessage(message)
 	})
 }
+
+func PProfToken(token string) Option {
+	return optionFunc(func(cfg *bootstarpServerConfig) {
+		cfg.pprofToken = token
+	})
+}

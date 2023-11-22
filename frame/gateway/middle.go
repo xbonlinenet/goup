@@ -224,6 +224,15 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 		}
 	}
 
+	if c.IsAborted() {
+		log.GetLogger("access_error").Info("request is aborted",
+			zap.String("url", c.Request.URL.String()),
+			zap.String("referer", c.Request.Referer()),
+			zap.String("reqId", cast.ToString(c.Keys[perf.ReqIdKey])),
+		)
+		return
+	}
+
 	handler := reflect.New(apiHandlerInfo.handler).Interface()
 	// 设置请求且信息
 	reflect.ValueOf(handler).Elem().FieldByName("Request").Set(reflect.ValueOf(request).Elem())

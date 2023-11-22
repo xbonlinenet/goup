@@ -81,7 +81,10 @@ func wrapRequest(foo func(c *gin.Context, prefix string), c *gin.Context, apiPat
 
 	reqId, reqLevel, err := getReqInfoFromHeader(c)
 	if err != nil {
-		reqId = uuid.NewV4().String()
+		ureqId, err := uuid.NewV4()
+		util.CheckError(err)
+		reqId = ureqId.String()
+
 		reqLevel = 1
 	}
 
