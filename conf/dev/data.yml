@@ -1,0 +1,46 @@
+data:
+  db:
+    demo:
+      type: mysql
+      url: test:test@tcp(192.168.0.22:3306)/goup?parseTime=True&loc=Local&multiStatements=true&charset=utf8mb4
+      max-idle-conn: 50
+      max-open-conn: 50
+    hello:
+      type: postgres
+      url: postgres://superset:superset@127.0.0.1/goup?sslmode=disable
+      max-idle-conn: 50
+      max-open-conn: 50
+  
+  redis:
+    gateway:
+      cluster: false
+      addr: 192.168.0.22:2000
+    demo-cluser:
+      cluster: true
+      addrs:
+        - xx.xx:2000
+        - xx.xx:3000
+  zk:
+    config:
+      servers:
+        - zookeeper01.com:2181
+        - zookeeper02.com:2181
+        - zookeeper03.com:2181
+        - zookeeper04.com:2181
+        - zookeeper05.com:2181
+  es:
+    demo:
+      ip: demo.com
+      port: 9200
+
+  kafka:
+    brokers:
+      - a.kafka1:9092
+      - a.kafka2:9092
+      - a.kafka3:9092
+
+  influxdb:
+    default:
+      addr: http://192.168.0.1:8086
+      user: xxxxxx
+      password: xxxxxxxxx
