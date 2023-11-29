@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/viper"
@@ -37,19 +36,10 @@ func FeishuNotify(msg, robotUrl string) {
 	payload_message := map[string]interface{}{
 		"msg_type": "text",
 		"content": map[string]interface{}{
-			"text": "test-message",
+			"text": msg,
 		},
 	}
-	// cli := &http.Client{}
-
-	cli := &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConnsPerHost: 20,
-			TLSHandshakeTimeout: 3000 * time.Millisecond,
-		},
-		Timeout: time.Millisecond * 5000,
-	}
-
+	cli := &http.Client{}
 	buf, err := json.Marshal(payload_message)
 	if err != nil {
 		return
