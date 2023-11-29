@@ -75,6 +75,7 @@ wget -O 'built/go/env_check.py' https://github.com/xbonlinenet/goup/raw/master/b
 wget -O 'built/make/common.make' https://github.com/xbonlinenet/goup/raw/master/built/make/common.make
 wget -O 'built/make/init.make' https://github.com/xbonlinenet/goup/raw/master/built/make/init.make
 wget -O 'built/sbin/go-monitor.sh' https://github.com/xbonlinenet/goup/raw/master/built/sbin/go-monitor.sh
+wget -O 'built/sbin/update_server.sh' https://github.com/xbonlinenet/goup/raw/master/built/sbin/update_server.sh
 wget -O 'built/version' https://github.com/xbonlinenet/goup/raw/master/built/version
 
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
@@ -83,7 +84,7 @@ $sed_cmd "s/0.0.0.0:13360/0.0.0.0:$port/g"  conf/dev/$module.yml
 $sed_cmd -i "s/demo-application/$parent\/$module/g"  conf/dev/$module.yml
 
 
-wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/main.go
+wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/pkg/cmd/demo/main.go
 $sed_cmd -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/$parent\/$module\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/$module/main.go
 
 wget -O "pkg/cmd/$module/api/demo/echo.go" https://github.com/xbonlinenet/goup/raw/master/demo/echo.go
@@ -103,24 +104,20 @@ $sed_cmd "s/127.0.0.1:13360/127.0.0.1:$port/g"  conf/dev/$module.yml
 cat << EOF > go.mod
 module coding.xbonline.net/$server
 
-go 1.12
+go 1.13
 
-replace (
-        cloud.google.com/go => github.com/googleapis/google-cloud-go v0.26.0
-
-        go.uber.org/atomic => github.com/uber-go/atomic v1.4.0
-        go.uber.org/multierr => github.com/uber-go/multierr v1.1.0
-        go.uber.org/zap => github.com/uber-go/zap v1.10.0
-
-        golang.org/x/crypto => github.com/golang/crypto v0.0.0-20190605123033-f99c8df09eb5
-        golang.org/x/net => github.com/golang/net v0.0.0-20190607181551-461777fb6f67
-        golang.org/x/sync => github.com/golang/sync v0.0.0-20190423024810-112230192c58
-        golang.org/x/sys => github.com/golang/sys v0.0.0-20190610200419-93c9922d18ae
-        golang.org/x/text => github.com/golang/text v0.3.2
-        google.golang.org/appengine => github.com/golang/appengine v1.6.1
-        gopkg.in/fsnotify.v1 => github.com/fsnotify/fsnotify v1.4.2
-        gopkg.in/jcmturner/gokrb5.v6 => github.com/jcmturner/gokrb5 v6.0.5+incompatible
+require (
+	github.com/bxcodec/faker/v3 v3.5.0
+	github.com/gavv/httpexpect v2.0.0+incompatible
+	github.com/gin-gonic/gin v1.7.7
+	github.com/jinzhu/gorm v1.9.16
+	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
+	github.com/onsi/ginkgo v1.12.0 // indirect
+	github.com/onsi/gomega v1.9.0 // indirect
+	github.com/xbonlinenet/goup v0.3.0
+	go.uber.org/zap v1.19.1
 )
+
 EOF
 
 mkdir test

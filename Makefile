@@ -21,6 +21,8 @@ export ldflags="-X 'github.com/xbonlinenet/goup/frame/flags.GoVersion=${GoVersio
 
 DATE=$(shell TZ=UTC-8 date '+%Y%m%d%H%M')
 
+init_:
+	go mod tidy
 
 build: init
 	python built/go/env_check.py 1.12
@@ -52,6 +54,9 @@ goup:
 	rm -f go.sum
 	sed -i '/github.com\/xbonlinenet\/goup/d' go.mod
 
+upload: release
+	@echo "upload: "${DATE}
+	$(call upload,${module},${DATE})
 
 help:
 	@echo

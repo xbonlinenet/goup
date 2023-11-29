@@ -63,6 +63,7 @@ wget -O 'built/go/env_check.py' https://github.com/xbonlinenet/goup/raw/master/b
 wget -O 'built/make/common.make' https://github.com/xbonlinenet/goup/raw/master/built/make/common.make
 wget -O 'built/make/init.make' https://github.com/xbonlinenet/goup/raw/master/built/make/init.make
 wget -O 'built/sbin/go-monitor.sh' https://github.com/xbonlinenet/goup/raw/master/built/sbin/go-monitor.sh
+wget -O 'built/sbin/update_server.sh' https://github.com/xbonlinenet/goup/raw/master/built/sbin/update_server.sh
 wget -O 'built/version' https://github.com/xbonlinenet/goup/raw/master/built/version
 
 wget -O 'conf/dev/data.yml' https://github.com/xbonlinenet/goup/raw/master/conf/product/data.yml
@@ -71,7 +72,7 @@ sed -i "" "s/0.0.0.0:13360/0.0.0.0:$port/g"  conf/dev/$module.yml
 sed -i "" "s/demo-application/$parent\/$module/g"  conf/dev/$module.yml 
 
 
-wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/main.go
+wget -O "pkg/cmd/$module/main.go" https://github.com/xbonlinenet/goup/raw/master/pkg/cmd/demo/main.go
 sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/$parent\/$module\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/$module/main.go
 
 # sed -i "s/github.com\/xbonlinenet\/goup\/demo/coding.xbonline.net\/server\/hello\/pkg\/cmd\/$module\/api\/demo/g" pkg/cmd/hello/main.go
