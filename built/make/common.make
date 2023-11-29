@@ -23,3 +23,16 @@ define release_app
 	@echo -e "\033[32m   直接运行 2. cd $(OUTPUT)/$(1);./bin/$(1) --config conf/application.yml \033[0m"
 	@echo -e "\033[32m   本地部署 3. mv $(OUTPUT)/$(1) /usr/local/vntop/ \033[0m"
 endef
+
+define upload
+	@echo "curl xb-svr-ftp.oss-cn-hongkong.aliyuncs.com  -T ./release/$(1).tar.gz.$(DATE)"
+	curl xb-svr-ftp.oss-cn-hongkong.aliyuncs.com  -T ./release/$(1).tar.gz.$(DATE)
+	@echo "eg: 手工部署到server与测试方式1: "
+	@echo "cd /usr/local/xbnet/server;wget xb-svr-ftp.oss-cn-hongkong.aliyuncs.com/$(1).tar.gz.$(DATE); tar zxvf $(1).tar.gz.$(DATE);"
+	@echo "./charge_server/sbin/go-monitor.sh restart; sleep 3; ./charge_server/bin/httptest"
+	@echo ""
+	@echo "eg: 手工部署server与测试方式2（前置条件：update_server.sh部署到服务器）"
+	@echo ""
+	@echo "cd /usr/local/xbnet/server; sh ./update_server.sh $(1).tar.gz.$(DATE)"
+	@echo ""
+endef
