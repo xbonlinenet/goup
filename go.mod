@@ -14,7 +14,7 @@ require (
 	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/gin-contrib/pprof v1.3.0
-	github.com/gin-gonic/gin v1.7.7
+	github.com/gin-gonic/gin v1.9.0
 	github.com/go-errors/errors v1.1.1
 	github.com/go-redis/cache v6.4.0+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -39,7 +39,7 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
-	golang.org/x/text v0.3.7
+	golang.org/x/net v0.7.0
+	golang.org/x/text v0.7.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
