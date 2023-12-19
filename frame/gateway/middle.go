@@ -1,8 +1,10 @@
 package gateway
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -88,6 +90,26 @@ func abs(n int64) int64 {
 	return (n ^ y) - y
 }
 
+func getBody(c *gin.Context) ([]byte, error) {
+
+	var body []byte
+	if cb, ok := c.Get(gin.BodyBytesKey); ok {
+		if cbb, ok := cb.([]byte); ok {
+			body = cbb
+		}
+	}
+	if body == nil {
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			return body, err
+		}
+		c.Set(gin.BodyBytesKey, body)
+
+		c.Request.Body = io.NopCloser(bytes.NewReader(body))
+	}
+	return body, nil
+}
+
 func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 
 	start := time.Now()
@@ -154,7 +176,17 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 	//处理签名校验
 
 	if apiHandlerInfo.signCheckHandlerV2 != nil {
-		if !apiHandlerInfo.signCheckHandlerV2.signCheck(c.Request.URL, c.Request.Header, c.MustGet(gin.BodyBytesKey).([]byte)) {
+		body := []byte{}
+		var err error
+		if apiHandlerInfo.pt == jsonType {
+			body, err = getBody(c)
+			if err != nil {
+				failHandler(c, http.StatusBadRequest, ErrInvalidParam, err.Error())
+				return
+			}
+		}
+
+		if !apiHandlerInfo.signCheckHandlerV2.signCheck(c.Request.URL, c.Request.Header, body) {
 			failHandler(c, http.StatusBadRequest, ErrInvalidSignature, "非法签名")
 			return
 		}
