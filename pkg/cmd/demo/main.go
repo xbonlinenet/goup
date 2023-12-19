@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"go.uber.org/zap"
 
@@ -74,7 +75,7 @@ func customRouter(r *gin.Engine) {
 	})
 }
 
-//如果是加密请求需要进行解密,再加一个defer函数来解决加密改写问题
+// 如果是加密请求需要进行解密,再加一个defer函数来解决加密改写问题
 func decryptImpl(c *gin.Context) bool {
 	//	判断header是否有Digest
 	log.Default().Info("into decryptImpl")
@@ -85,8 +86,8 @@ func encryptImpl(c *gin.Context, d interface{}) string {
 	log.Default().Info("into encryptImpl")
 	return "x"
 }
-func signCheckImpl(c *gin.Context) bool {
-	log.Default().Info("into signCheckImpl", zap.Any("c", c.Request.Header.Get("sign")))
+func signCheckImpl(u *url.URL, header http.Header, body []byte) bool {
+	log.Default().Info("into signCheckImpl", zap.Any("c", header.Get("sign")))
 	return true
 }
 
@@ -96,8 +97,7 @@ func registerRouter() {
 	cryptoHandler := gateway.NewCryptoHandler(encryptImpl, decryptImpl)
 	gateway.WithCryptoHandler(cryptoHandler)
 	//签名校验
-	signCheck := gateway.NewSignCheckHandler(signCheckImpl)
-	gateway.WithSignCheckHandler(signCheck)
+	signCheck := gateway.NewSignCheckHandlerV2(signCheckImpl)
 
 	gateway.RegisterAPI("demo", "echo", "Demo for echo", demo.EchoHandler{})
 	gateway.RegisterAPI("demo", "cors_echo", "Demo for cors",
@@ -114,7 +114,7 @@ func registerRouter() {
 		gateway.HandlerFunc(demoPreHandler2),
 		gateway.HandlerFunc(demoPreHandler3),
 		gateway.WithCryptoHandler(cryptoHandler),
-		gateway.WithSignCheckHandler(signCheck),
+		gateway.WithSignCheckHandlerV2(signCheck),
 	)
 	gateway.RegisterAPI("demo", "sleep", "Demo for sleep", demo.SleepHandler{})
 	gateway.RegisterAPI("demo", "doc", "Demo complex sturct", demo.DocHandler{})

@@ -152,7 +152,13 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 		return
 	}
 	//处理签名校验
-	if apiHandlerInfo.signCheckHandler != nil {
+
+	if apiHandlerInfo.signCheckHandlerV2 != nil {
+		if !apiHandlerInfo.signCheckHandlerV2.signCheck(c.Request.URL, c.Request.Header, c.MustGet(gin.BodyBytesKey).([]byte)) {
+			failHandler(c, http.StatusBadRequest, ErrInvalidSignature, "非法签名")
+			return
+		}
+	} else if apiHandlerInfo.signCheckHandler != nil {
 		if !apiHandlerInfo.signCheckHandler.signCheck(c) {
 			failHandler(c, http.StatusBadRequest, ErrInvalidSignature, "非法签名")
 			return

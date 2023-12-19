@@ -119,7 +119,8 @@ type HandlerInfo struct {
 	// 加解密处理
 	cryptoHandler *CryptoHandler
 	//签名校验处理
-	signCheckHandler *SignCheckHandler
+	signCheckHandler   *SignCheckHandler
+	signCheckHandlerV2 *SignCheckHandlerV2
 	// preHandlers 在业务Handler 处理前，定义的预处理
 	preHandlers []PreHandler
 
