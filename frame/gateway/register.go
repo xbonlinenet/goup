@@ -41,6 +41,7 @@ func RegisterAPI(group string, key, name string, handler Handler, opts ...Option
 		reqType: reqType,
 		handler: reflect.ValueOf(handler).Type(),
 		expire:  10 * time.Minute,
+		pt:      jsonType,
 	}
 
 	for _, opt := range opts {
