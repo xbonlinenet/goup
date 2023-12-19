@@ -99,7 +99,8 @@ func getBody(c *gin.Context) ([]byte, error) {
 		}
 	}
 	if body == nil {
-		body, err := io.ReadAll(c.Request.Body)
+		var err error
+		body, err = io.ReadAll(c.Request.Body)
 		if err != nil {
 			return body, err
 		}

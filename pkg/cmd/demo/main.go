@@ -87,7 +87,7 @@ func encryptImpl(c *gin.Context, d interface{}) string {
 	return "x"
 }
 func signCheckImpl(u *url.URL, header http.Header, body []byte) bool {
-	log.Default().Info("into signCheckImpl", zap.Any("c", header.Get("sign")))
+	log.Default().Info("into signCheckImpl", zap.String("path", u.Path), zap.Any("header", header), zap.Any("body", string(body)))
 	return true
 }
 
@@ -99,7 +99,7 @@ func registerRouter() {
 	//签名校验
 	signCheck := gateway.NewSignCheckHandlerV2(signCheckImpl)
 
-	gateway.RegisterAPI("demo", "echo", "Demo for echo", demo.EchoHandler{})
+	gateway.RegisterAPI("demo", "echo", "Demo for echo", demo.EchoHandler{}, gateway.WithSignCheckHandlerV2(signCheck))
 	gateway.RegisterAPI("demo", "cors_echo", "Demo for cors",
 		demo.EchoHandler{},
 		gateway.WithCORSHandler(ilikeCORSHandler),
