@@ -67,7 +67,7 @@ func InitAlter(notifyFuncHandle NotifyFunc) {
 	users := viper.GetStringSlice("alter.users")
 	robotUrls := viper.GetStringSlice("alter.robot-urls")
 	if len(users) == 0 && len(robotUrls) == 0 {
-		panic(errors.New("Havn't config alter users or robots"))
+		panic(errors.New("Haven't config alter users or robots"))
 	}
 
 	log.Default().Info(fmt.Sprintf("Alter users: %s", users))
@@ -106,6 +106,6 @@ func NotifyError(message string, err error) {
 	errorStr := fmt.Sprintf("%s:%s %d", goErr.StackFrames()[0].File, goErr.StackFrames()[0].Name, goErr.StackFrames()[0].LineNumber)
 	errorID := util.CalcMD5(errorStr)
 	log.Default().Info(fmt.Sprintf("Occur error: %s", message))
-	log.Default().Info(fmt.Sprintf("strack: %s", sb.String()))
+	log.Default().Info(fmt.Sprintf("stack: %s", sb.String()))
 	Notify(message, sb.String(), errorID)
 }
