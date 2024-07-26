@@ -174,6 +174,18 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 		// c.String(http.StatusNotFound, fmt.Sprintf("api: %s not registered!", apiKey))
 		return
 	}
+
+	// 处理 CORS
+	if apiHandlerInfo.corsHandler != nil &&
+		apiHandlerInfo.corsHandler.CheckOriginByRequest(c.Request) {
+		apiHandlerInfo.corsHandler.WriteCORSHeader(c)
+	}
+
+	// 处理 OPTIONS 请求
+	if c.Request.Method == http.MethodOptions {
+		c.PureJSON(200, gin.H{})
+		return
+	}
 	//处理签名校验
 
 	if apiHandlerInfo.signCheckHandlerV2 != nil {
@@ -203,17 +215,6 @@ func handlerApiRequest(c *gin.Context, apiPathPrefix string) {
 			failHandler(c, http.StatusBadRequest, ErrCryptoError, "数据加密错误")
 			return
 		}
-	}
-	// 处理 CORS
-	if apiHandlerInfo.corsHandler != nil &&
-		apiHandlerInfo.corsHandler.CheckOriginByRequest(c.Request) {
-		apiHandlerInfo.corsHandler.WriteCORSHeader(c)
-	}
-
-	// 处理 OPTIONS 请求
-	if c.Request.Method == http.MethodOptions {
-		c.PureJSON(200, gin.H{})
-		return
 	}
 
 	reqId, level, er := getReqInfo(c)
