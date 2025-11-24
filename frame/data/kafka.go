@@ -96,12 +96,16 @@ func NewAsyncProducer() (sarama.AsyncProducer, error) {
 		return nil, ErrKafkaNoBrokers
 	}
 
-	config := sarama.NewConfig()
-	config.Version = sarama.V0_11_0_0
-	config.Producer.Compression = sarama.CompressionLZ4
-	config.Producer.Retry.Max = 5
-	config.Producer.Return.Successes = true
-	return sarama.NewAsyncProducer(brokers, config)
+	cfg := sarama.NewConfig()
+	cfg.Version = sarama.V0_11_0_0
+	cfg.Producer.Compression = sarama.CompressionLZ4
+	cfg.Producer.Retry.Max = 5
+	cfg.Producer.Return.Successes = true
+	cfg.Producer.Flush.Messages = 1000
+	cfg.Producer.Flush.Bytes = 5 * 1024 * 1024
+	cfg.Producer.Flush.Frequency = 100 * time.Millisecond
+	cfg.Producer.Retry.Max = 5
+	return sarama.NewAsyncProducer(brokers, cfg)
 }
 
 var aSyncProducer sarama.AsyncProducer
