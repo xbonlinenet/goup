@@ -66,6 +66,15 @@ func handlerApiRequest(c *gin.Context) {
 
 	defer func() {
 		if err := recover(); err != nil {
+			if recovery.IsBrokenConnectionError(err) {
+				log.Default().Sugar().Warnf("[Recovery] request connection closed: %s, %v", c.Request.URL.Path, err)
+				if recoveredErr, ok := err.(error); ok {
+					_ = c.Error(recoveredErr)
+				}
+				c.Abort()
+				return
+			}
+
 			stack := recovery.Stack(3)
 			log.GetLogger("error").Sugar().Errorf("[Recovery] %s, %v\n %s", err, c.Request.URL.Path, stack)
 			notifyMsg, notifyDetail, notifyErrorID := fmt.Sprintf("Error: %s", err), string(stack), c.Request.URL.Path

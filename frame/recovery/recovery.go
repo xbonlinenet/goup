@@ -6,10 +6,12 @@ package recovery
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http/httputil"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +49,15 @@ func RecoveryWithWriter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
+				if IsBrokenConnectionError(err) {
+					log.Default().Warn(fmt.Sprintf("[Recovery] %s request connection closed: %v", c.Request.URL.Path, err))
+					if recoveredErr, ok := err.(error); ok {
+						_ = c.Error(recoveredErr)
+					}
+					c.Abort()
+					return
+				}
+
 				stack := Stack(3)
 				httprequest, _ := httputil.DumpRequest(c.Request, false)
 				message := fmt.Sprintf("[Recovery] %s panic recovered:\n%s\n%s\n%s%s", TimeFormat(time.Now()), string(httprequest), err, stack, reset)
@@ -61,6 +72,18 @@ func RecoveryWithWriter() gin.HandlerFunc {
 		}()
 		c.Next()
 	}
+}
+
+// IsBrokenConnectionError reports whether a recovered error was caused by a
+// client connection that has already been closed. Such errors must not trigger
+// stack collection, alerts, or another response write.
+func IsBrokenConnectionError(err interface{}) bool {
+	recoveredErr, ok := err.(error)
+	if !ok {
+		return false
+	}
+
+	return errors.Is(recoveredErr, syscall.EPIPE) || errors.Is(recoveredErr, syscall.ECONNRESET)
 }
 
 // stack returns a nicely formatted stack frame, skipping skip frames.
